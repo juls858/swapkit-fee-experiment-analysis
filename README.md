@@ -282,6 +282,9 @@ swapkit-fee-experiment-analysis/
 ├── dashboards/
 │   ├── streamlit_app.py            # Main Phase 1 dashboard
 │   └── components/                  # Reusable dashboard components
+├── sql/                             # Phase 1 Snowflake SQL scripts
+│   ├── README.md                    # Execution order and script overview
+│   └── 00_create_schema.sql        # Plus 16 additional numbered scripts
 ├── notebooks/                       # Jupyter notebooks for exploration
 ├── tests/                          # Test suite
 │   ├── test_data/                  # Test fixtures
@@ -290,10 +293,15 @@ swapkit-fee-experiment-analysis/
 │   ├── SNOWFLAKE_SWAPKIT_SCHEMA.md
 │   ├── SWAPKIT_DATASHARE.md
 │   ├── swapkit_bigquery_data_dictionary.md
-│   └── swapkit_executive_summary.md
+│   ├── swapkit_executive_summary.md
+│   └── THORChain_Fee_Experiment_Analysis_Plan.md
 ├── pyproject.toml                  # Project configuration
 └── README.md                       # This file
 ```
+
+### Phase 1 SQL Scripts
+
+All SQL used to validate the Phase 1 deliverables now lives in `sql/`. The scripts retain their original numbering (`00`–`16`) to indicate execution order, and a dedicated [sql/README.md](sql/README.md) explains the purpose of each file. Run these statements against Snowflake to rebuild the views consumed by the dashboard.
 
 ## Data Sources
 
