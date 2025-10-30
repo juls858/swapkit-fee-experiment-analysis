@@ -1,0 +1,195 @@
+# THORChain Fee Experiment Analysis - Cursor Rules
+
+## Project Context
+
+This is a data analysis project for THORChain's fee experiment, analyzing swap fee tiers and their impact on revenue and user behavior.
+
+### Technology Stack
+- **Python**: 3.13 (latest stable)
+- **Package Manager**: PDM (not pip, not poetry)
+- **Data Processing**: Polars (primary), Pandas (secondary for compatibility)
+- **Database**: Snowflake (`9R.FEE_EXPERIMENT` schema)
+- **Dashboard**: Streamlit with Altair/Plotly visualizations
+- **Linting/Formatting**: Ruff (replaces Black, isort, flake8)
+- **Testing**: pytest with pytest-cov
+
+### Project Status
+- Phase 1: Complete (data validation)
+- Phase 2: In Progress (dashboard development)
+- Phase 3: Planned (statistical analysis)
+
+## Code Style Guidelines
+
+### Python Standards
+- Follow PEP 8 with 100 character line length
+- Use type hints where beneficial (not required everywhere)
+- Prefer f-strings over .format() or %
+- Use pathlib.Path for file operations
+- Follow existing code style in `dashboards/streamlit_app.py`
+
+### Data Processing
+- **Prefer Polars over Pandas** for new code (better performance)
+- Use Snowpark Session for database queries
+- Cache expensive operations in Streamlit with `@st.cache_data` or `@st.cache_resource`
+- Handle timezone-aware datetimes properly (data is in UTC)
+
+### Imports
+- Standard library first
+- Third-party packages second
+- Local imports last
+- Use absolute imports: `from thorchain_fee_analysis.data import ...`
+
+### Testing
+- Write tests for all new functionality
+- Use pytest fixtures for common setup
+- Mock Snowflake connections in tests
+- Aim for >80% code coverage
+
+## Snowflake Connection
+
+Always use the shared connection module:
+```python
+from thorchain_fee_analysis.data.snowflake_conn import get_snowpark_session
+
+session = get_snowpark_session()
+```
+
+Never hardcode credentials. Support three methods:
+1. Streamlit secrets (deployment)
+2. ~/.snowflake/connections.toml (local dev)
+3. Environment variables (CI/CD)
+
+## Dashboard Development
+
+### Streamlit Best Practices
+- Use `st.cache_data` for data loading (with TTL for live data)
+- Use `st.cache_resource` for database connections
+- Keep callbacks simple and fast
+- Use columns for layout: `col1, col2 = st.columns(2)`
+- Provide meaningful help text and tooltips
+
+### Visualization
+- Use Altair for declarative charts (preferred)
+- Use Plotly for interactive/complex visualizations
+- Keep chart code in separate functions for reusability
+- Format large numbers with K/M/B suffixes
+- Use consistent color schemes across charts
+
+### Data Display
+- Format currency as `$1,234.56` or `$1.2M`
+- Format percentages as `12.34%`
+- Format basis points as `123 bps` or `1.23%`
+- Use metric cards for KPIs
+- Provide CSV download for tables
+
+## File Organization
+
+- **src/thorchain_fee_analysis/**: Reusable Python modules
+  - `data/`: Data loading, validation, Snowflake connection
+  - `analysis/`: Statistical analysis, elasticity models
+  - `visualization/`: Chart generation utilities
+  - `utils/`: Shared helpers
+
+- **dashboards/**: Streamlit apps
+  - Main dashboard: `streamlit_app.py`
+  - Reusable components in `components/`
+
+- **notebooks/**: Jupyter notebooks for exploration
+- **tests/**: Test suite (mirrors src/ structure)
+- **docs/**: Documentation (schema, data dictionary)
+
+## Common Patterns
+
+### Loading Data from Snowflake
+```python
+@st.cache_data(show_spinner=False, ttl=60)
+def load_data(_session: Session) -> pd.DataFrame:
+    sql = 'SELECT * FROM "9R".FEE_EXPERIMENT.VIEW_NAME'
+    df = _session.sql(sql).to_pandas()
+    df.columns = df.columns.str.lower()  # Normalize column names
+    return df
+```
+
+### Error Handling
+```python
+try:
+    data = load_data(session)
+except Exception as e:
+    st.error(f"Failed to load data: {e}")
+    st.stop()
+```
+
+### Date Filtering
+```python
+# Compute date bounds from data
+start_date = pd.to_datetime(df["date"].min()).tz_localize(None)
+end_date = pd.to_datetime(df["date"].max()).tz_localize(None)
+
+# Provide date input
+date_range = st.date_input(
+    "Date range",
+    value=(start_date.date(), end_date.date()),
+    min_value=start_date.date(),
+    max_value=end_date.date(),
+)
+```
+
+## Schema Knowledge
+
+### Key Tables/Views
+- `V_WEEKLY_SUMMARY_FINAL`: Aggregated weekly metrics
+- `V_FEE_PERIODS_MANUAL`: Experiment period definitions
+- `V_PERIOD_REVENUE_CI`: Revenue confidence intervals
+- `V_SWAPS_EXPERIMENT_WINDOW`: Swap-level detail
+
+### Important Columns
+- `final_fee_bps`: Fee tier in basis points
+- `realized_fee_bps`: Actual fees collected
+- `period_source`: 'manual' or 'auto'
+- All USD amounts: volume_usd, fees_usd, etc.
+
+### Asset Naming Convention
+- Format: `CHAIN.SYMBOL[-CONTRACT]`
+- Examples: `BTC.BTC`, `ETH.ETH`, `ETH.USDT-0xdAC...`
+
+## PDM Commands
+
+Never use `pip install`. Always use PDM:
+```bash
+pdm add package-name          # Add dependency
+pdm add -d package-name       # Add dev dependency
+pdm install                   # Install all dependencies
+pdm run command               # Run script
+```
+
+Common scripts:
+- `pdm run dashboard` - Launch Streamlit
+- `pdm run test` - Run pytest
+- `pdm run lint` - Lint with Ruff
+- `pdm run format` - Format with Ruff
+
+## What NOT to Do
+
+❌ Don't use pip/conda/poetry (use PDM)
+❌ Don't hardcode credentials
+❌ Don't commit large data files
+❌ Don't use deprecated Pandas methods
+❌ Don't skip type hints in function signatures
+❌ Don't write tests without assertions
+❌ Don't create notebooks without saving to git
+❌ Don't bypass pre-commit hooks
+
+## When to Ask
+
+If you're unsure about:
+- Database schema or query performance
+- Statistical methods for Phase 3
+- Deployment strategy
+- New dependencies to add
+
+## Resources
+
+- Schema docs: `docs/SNOWFLAKE_SWAPKIT_SCHEMA.md`
+- Data dictionary: `docs/swapkit_bigquery_data_dictionary.md`
+- Existing dashboard: `dashboards/streamlit_app.py`
+- Snowflake connection: `src/thorchain_fee_analysis/data/snowflake_conn.py`

@@ -1,0 +1,131 @@
+[project]
+name = "thorchain-fee-analysis"
+version = "0.1.0"
+description = "THORChain Fee Experiment Analysis - Phase 1 Complete, Phase 2 Dashboard Development"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+license = {text = "MIT"}
+authors = [
+    {name = "Julius Remigio", email = "your.email@example.com"}
+]
+packages = [{include = "thorchain_fee_analysis", from = "src"}]
+dependencies = [
+    "pandas>=2.2.0",
+    "polars>=0.20.0",
+    "numpy>=1.26.0",
+    "streamlit>=1.32.0",
+    "altair>=5.2.0",
+    "plotly>=5.18.0",
+    "snowflake-snowpark-python>=1.14.0",
+    "python-dotenv>=1.0.0",
+]
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+distribution = true
+
+[[tool.pdm.source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.3.0",
+    "pre-commit>=3.6.0",
+    "ipython>=8.21.0",
+    "jupyter>=1.0.0",
+]
+
+[tool.pdm.scripts]
+dashboard = "streamlit run dashboards/streamlit_app.py"
+test = "pytest tests/ -v"
+test-cov = "pytest tests/ -v --cov=src/thorchain_fee_analysis --cov-report=html"
+lint = "ruff check ."
+format = "ruff format ."
+format-check = "ruff format --check ."
+precommit-install = "pre-commit install"
+precommit-run = "pre-commit run --all-files"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [
+    ".venv",
+    "__pycache__",
+    ".pytest_cache",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade
+    "PL",  # pylint
+]
+ignore = [
+    "E402",    # Module level import not at top of file (needed for sys.path manipulation)
+    "E501",    # line too long (handled by formatter)
+    "PLC0415", # Import should be at top-level (lazy imports for performance)
+    "PLR0912", # Too many branches (acceptable for dashboard main function)
+    "PLR0913", # too many arguments
+    "PLR0915", # Too many statements (acceptable for dashboard main function)
+    "PLR2004", # magic value used in comparison
+]
+
+[tool.ruff.lint.per-file-ignores]
+"verify_setup.py" = ["F401"]  # Unused imports are intentional for testing importability
+"dashboards/streamlit_app.py" = ["F841"]  # Unused variables may be kept for clarity
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.isort]
+known-first-party = ["thorchain_fee_analysis"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
