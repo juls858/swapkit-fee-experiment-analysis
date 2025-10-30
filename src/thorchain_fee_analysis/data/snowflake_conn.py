@@ -48,7 +48,9 @@ def get_snowpark_session(
                         "schema": st.secrets.snowflake.get("schema", "FEE_EXPERIMENT"),
                     }
                 ).create()
-        except (ImportError, AttributeError, KeyError):
+        except (ImportError, AttributeError, KeyError, Exception):
+            # Catches StreamlitSecretNotFoundError and other exceptions
+            # Falls back to next connection method
             pass
 
     # Method 2: Try connections.toml file
