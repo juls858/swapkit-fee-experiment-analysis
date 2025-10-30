@@ -43,7 +43,8 @@ dev = [
 ]
 
 [tool.pdm.scripts]
-dashboard = "streamlit run dashboards/streamlit_app.py"
+dashboard = "streamlit run dashboards/phase1_data_validation.py"
+phase1 = "streamlit run dashboards/phase1_data_validation.py"
 notebook = "jupyter lab notebooks/"
 test = "pytest tests/ -v"
 test-cov = "pytest tests/ -v --cov=src/thorchain_fee_analysis --cov-report=html"
@@ -87,7 +88,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "verify_setup.py" = ["F401"]  # Unused imports are intentional for testing importability
-"dashboards/streamlit_app.py" = ["F841"]  # Unused variables may be kept for clarity
+"dashboards/phase1_data_validation.py" = ["F841"]  # Unused variables may be kept for clarity
 
 [tool.ruff.format]
 quote-style = "double"

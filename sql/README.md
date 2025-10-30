@@ -41,5 +41,5 @@ The files can be executed in order to recreate the Phase 1 analytical tables ins
 
 - Scripts are written for Snowflake and leverage Snowpark-friendly SQL patterns.
 - Execute using SnowSQL, Snowsight Worksheets, or any Snowflake-compatible client.
-- Outputs feed the Streamlit dashboard located in `dashboards/streamlit_app.py`.
+- Outputs feed the Phase 1 Streamlit dashboard located in `dashboards/phase1_data_validation.py`.
 - See `README.md` for broader project context and Phase 1 validation details.

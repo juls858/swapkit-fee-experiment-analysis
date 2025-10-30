@@ -265,7 +265,7 @@ lsof -ti:8501
 kill $(lsof -ti:8501)
 
 # Or use a different port
-pdm run streamlit run dashboards/streamlit_app.py --server.port 8502
+pdm run streamlit run dashboards/phase1_data_validation.py --server.port 8502
 ```
 
 ## Project Structure
@@ -280,7 +280,7 @@ swapkit-fee-experiment-analysis/
 │       ├── visualization/           # Chart generation utilities
 │       └── utils/                   # Shared helper functions
 ├── dashboards/
-│   ├── streamlit_app.py            # Main Phase 1 dashboard
+│   ├── phase1_data_validation.py   # Phase 1: Data validation dashboard
 │   └── components/                  # Reusable dashboard components
 ├── sql/                             # Phase 1 Snowflake SQL scripts
 │   ├── README.md                    # Execution order and script overview
@@ -468,7 +468,7 @@ If the dashboard doesn't load:
 1. Check that port 8501 is not in use
 2. Verify Snowflake connection is configured
 3. Check the terminal for error messages
-4. Try running with debug logging: `pdm run streamlit run dashboards/streamlit_app.py --logger.level=debug`
+4. Try running with debug logging: `pdm run streamlit run dashboards/phase1_data_validation.py --logger.level=debug`
 
 ## License
 

@@ -176,7 +176,7 @@ pdm run precommit-run
 5. **Formatting:** Applied consistent code style
 
 ### Files Modified by Hooks:
-- `dashboards/streamlit_app.py` - isinstance syntax, formatting
+- `dashboards/phase1_data_validation.py` (formerly streamlit_app.py) - isinstance syntax, formatting
 - `docs/swapkit_executive_summary.md` - trailing whitespace
 - `docs/swapkit_bigquery_data_dictionary.md` - trailing whitespace
 - Multiple config files - end-of-file newlines
