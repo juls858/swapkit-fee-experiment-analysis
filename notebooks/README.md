@@ -25,10 +25,6 @@ To open notebooks directly in Cursor, you need to install the Jupyter extension:
 5. Reload Cursor
 6. Click on any `.ipynb` file to open it
 
-## Available Notebooks
-
-- `00_template.ipynb` - Template for creating new analysis notebooks
-
 ## Creating New Notebooks
 
 ### From JupyterLab:
