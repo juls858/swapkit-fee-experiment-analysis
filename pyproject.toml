@@ -44,6 +44,7 @@ dev = [
 
 [tool.pdm.scripts]
 dashboard = "streamlit run dashboards/streamlit_app.py"
+notebook = "jupyter lab notebooks/"
 test = "pytest tests/ -v"
 test-cov = "pytest tests/ -v --cov=src/thorchain_fee_analysis --cov-report=html"
 lint = "ruff check ."
