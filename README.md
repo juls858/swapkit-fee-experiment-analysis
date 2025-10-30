@@ -353,6 +353,19 @@ pdm run pytest tests/test_snowflake_conn.py
 pdm run test-cov
 ```
 
+### Working with Notebooks
+
+```bash
+# Launch JupyterLab
+pdm run notebook
+```
+
+**Note**: If you see a "No file system provider found" error when opening `.ipynb` files in Cursor:
+1. Install the **Jupyter** extension in Cursor (search "Jupyter" in Extensions)
+2. Or use JupyterLab instead: `pdm run notebook`
+
+See `notebooks/README.md` for detailed notebook setup instructions.
+
 ### Code Style
 
 This project uses:
