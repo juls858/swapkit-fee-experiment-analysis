@@ -7,7 +7,7 @@ A comprehensive analysis toolkit for analyzing THORChain fee experiment data fro
 > ✅ **Setup Validated:** All dependencies installed, tests passing, linting clean. See [SETUP_COMPLETE.md](SETUP_COMPLETE.md) for details.
 
 - ✅ **Phase 1**: Complete - Data validation and infrastructure setup
-- 🚧 **Phase 2**: In Progress - Interactive dashboard development
+- ✅ **Phase 2**: Complete - dbt + multipage Streamlit dashboard
 - 📋 **Phase 3**: Planned - Statistical analysis and elasticity modeling
 
 ## Overview
@@ -16,11 +16,12 @@ This project analyzes THORChain's fee experiment data to understand the impact o
 
 ### Key Features
 
-- **Data Pipeline**: Robust Snowflake connection handling with multiple authentication methods
-- **Interactive Dashboard**: Real-time visualization of fee experiment metrics
-- **Statistical Analysis**: Tools for elasticity modeling and hypothesis testing
+- **dbt Data Pipeline**: SQL transformations organized in staging/intermediate/marts layers
+- **Multipage Dashboard**: Interactive Streamlit app with separate pages for weekly, pool, and user analysis
+- **Data Quality**: Automated dbt tests ensure data integrity
+- **Robust Connection**: Snowflake connection with multiple authentication methods
 - **High Performance**: Leverages Polars for efficient data processing
-- **Modern Python**: Built with Python 3.13, PDM, and the Astral toolchain (Ruff, uv)
+- **Modern Python**: Built with Python 3.13, PDM, dbt, and the Astral toolchain (Ruff, uv)
 
 ## Quick Start
 
@@ -192,10 +193,55 @@ Expected output:
 
 If you see any ❌, follow the suggestions in the output.
 
-#### 6. Run the Dashboard
+#### 6. Set Up dbt Profile
+
+dbt needs a profile to connect to Snowflake. Create `~/.dbt/profiles.yml`:
+
+```yaml
+thorchain_snowflake:
+  target: prod
+  outputs:
+    prod:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'ANALYST') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', '9R') }}"
+      schema: "{{ env_var('DBT_SCHEMA', 'FEE_EXPERIMENT_MARTS') }}"
+      threads: 4
+      client_session_keep_alive: false
+```
+
+Set environment variables (add to your shell rc file):
+```bash
+export SNOWFLAKE_ACCOUNT="your-account-identifier"
+export SNOWFLAKE_USER="your-username"
+export SNOWFLAKE_PASSWORD="your-password"
+export SNOWFLAKE_ROLE="ANALYST"
+export SNOWFLAKE_WAREHOUSE="COMPUTE_WH"
+export SNOWFLAKE_DATABASE="9R"
+export DBT_SCHEMA="FEE_EXPERIMENT_MARTS"
+```
+
+#### 7. Run dbt Models
 
 ```bash
-# Launch the Streamlit dashboard
+# Test dbt connection
+pdm run dbt-debug
+
+# Build all models and run tests
+pdm run dbt-build
+
+# Or just run models (skip tests)
+pdm run dbt-run
+```
+
+#### 8. Run the Dashboard
+
+```bash
+# Launch the multipage Streamlit dashboard
 pdm run dashboard
 
 # The dashboard will open automatically in your browser at:
@@ -203,9 +249,10 @@ pdm run dashboard
 ```
 
 **First-time tips:**
-- Dashboard may take 10-30 seconds to load data from Snowflake
-- Use the sidebar filters to explore different date ranges and fee tiers
-- Download CSV exports using the download button
+- Dashboard loads data from dbt-created marts in Snowflake
+- Use sidebar to navigate between pages: Weekly Summary, Pool Analysis, User Analysis
+- Use filters to explore different date ranges and fee tiers
+- Download CSV exports using the download button on each page
 
 ### Troubleshooting Installation
 
@@ -272,72 +319,118 @@ pdm run streamlit run dashboards/phase1_data_validation.py --server.port 8502
 
 ```
 swapkit-fee-experiment-analysis/
+├── dbt/                             # dbt project for SQL transformations
+│   ├── models/
+│   │   ├── sources/                 # Source definitions
+│   │   ├── staging/                 # Base cleaned tables
+│   │   ├── intermediate/            # Business logic transformations
+│   │   └── marts/                   # Final dashboard-ready tables
+│   ├── seeds/                       # Static CSV data
+│   ├── macros/                      # Reusable SQL functions
+│   ├── tests/                       # Custom data tests
+│   └── dbt_project.yml             # dbt configuration
 ├── src/
 │   └── thorchain_fee_analysis/      # Main Python package
-│       ├── data/                    # Data loading and validation
-│       │   └── snowflake_conn.py   # Snowflake connection utilities
-│       ├── analysis/                # Statistical analysis modules
+│       ├── data/                    # Data loading and Snowflake connection
+│       ├── analysis/                # Statistical analysis modules (Phase 3)
 │       ├── visualization/           # Chart generation utilities
 │       └── utils/                   # Shared helper functions
 ├── dashboards/
-│   ├── phase1_data_validation.py   # Phase 1: Data validation dashboard
-│   └── components/                  # Reusable dashboard components
-├── sql/                             # Phase 1 Snowflake SQL scripts
-│   ├── README.md                    # Execution order and script overview
-│   └── 00_create_schema.sql        # Plus 16 additional numbered scripts
+│   └── app/                         # Multipage Streamlit dashboard
+│       ├── Home.py                  # Dashboard entry point
+│       ├── pages/                   # Dashboard pages
+│       │   ├── 01_Weekly_Summary.py
+│       │   ├── 02_Pool_Analysis.py
+│       │   ├── 03_User_Analysis.py
+│       │   └── 04_Data_Validation.py
+│       └── components/              # Reusable UI components
+├── sql/                             # Legacy SQL scripts (replaced by dbt)
+│   └── README.md                    # Documentation
 ├── notebooks/                       # Jupyter notebooks for exploration
-├── tests/                          # Test suite
-│   ├── test_data/                  # Test fixtures
-│   └── test_*.py                   # Test modules
+├── tests/                          # Pytest test suite
 ├── docs/                           # Documentation
-│   ├── SNOWFLAKE_SWAPKIT_SCHEMA.md
-│   ├── SWAPKIT_DATASHARE.md
-│   ├── swapkit_bigquery_data_dictionary.md
-│   ├── swapkit_executive_summary.md
-│   └── THORChain_Fee_Experiment_Analysis_Plan.md
 ├── pyproject.toml                  # Project configuration
 └── README.md                       # This file
 ```
 
-### Phase 1 SQL Scripts
+### dbt Models
 
-All SQL used to validate the Phase 1 deliverables now lives in `sql/`. The scripts retain their original numbering (`00`–`16`) to indicate execution order, and a dedicated [sql/README.md](sql/README.md) explains the purpose of each file. Run these statements against Snowflake to rebuild the views consumed by the dashboard.
+SQL transformations are now managed by dbt in the `dbt/` directory:
+
+- **Sources**: Raw Snowflake tables from `THORCHAIN.DEFI` and `9R.FEE_EXPERIMENT`
+- **Staging**: Cleaned, normalized base tables (`stg_*`)
+- **Intermediate**: Business logic and aggregations (`int_*`)
+- **Marts**: Final fact tables for dashboard (`fct_*`)
+
+See `dbt/README.md` for detailed model documentation and lineage.
+
+## Execution Quality (SwapKit Quotes Only)
+
+Minimal artifacts to answer execution quality from quotes, grouped by provider and USD size buckets by week:
+
+- SQL: `sql/execution_quality/weekly_eq_quotes.sql`
+- CSV: `outputs/weekly_eq_quotes.csv`
+- Data dictionary: `docs/execution_quality/weekly_eq_data_dictionary.md`
+
+Re-generate the CSV via BigQuery CLI:
+
+```bash
+bq query --use_legacy_sql=false --format=csv \
+  < sql/execution_quality/weekly_eq_quotes.sql \
+  > outputs/weekly_eq_quotes.csv
+```
+
+Notes:
+- Uses only `swapkit-shared-analytics.api_data.quotes` (BigQuery)
+- EQ from quotes: `eq_bps = -total_slippage_bps` (positive = improvement)
+- USD size buckets applied only when either leg is USD stable (no external pricing)
 
 ## Data Sources
 
-### Snowflake Database: `9R.FEE_EXPERIMENT`
+### Snowflake Database
 
-The analysis uses the following views:
+The analysis uses data from:
 
-- **`V_WEEKLY_SUMMARY_FINAL`**: Weekly aggregated metrics by fee tier
-- **`V_FEE_PERIODS_MANUAL`**: Manually defined experiment periods
-- **`V_PERIOD_REVENUE_CI`**: Revenue confidence intervals
-- **`V_SWAPS_EXPERIMENT_WINDOW`**: Individual swap-level data
+**Source Tables:**
+- `THORCHAIN.DEFI.FACT_SWAPS`: Raw swap transactions
+- `THORCHAIN.CORE.DIM_BLOCK`: Block height to timestamp mapping
 
-For detailed schema documentation, see [`docs/SNOWFLAKE_SWAPKIT_SCHEMA.md`](docs/SNOWFLAKE_SWAPKIT_SCHEMA.md).
+**dbt-Generated Marts** (in `9R.FEE_EXPERIMENT_MARTS`):**
+- `fct_weekly_summary_final`: Weekly aggregated metrics by fee tier
+- `fct_pool_weekly_summary`: Pool-level performance metrics
+- `fct_user_weekly_summary`: User-level behavior metrics
+
+**Legacy Views** (in `9R.FEE_EXPERIMENT`):**
+- Still available for reference, but dashboard now queries dbt marts
+
+For detailed schema documentation, see:
+- [`docs/SNOWFLAKE_SWAPKIT_SCHEMA.md`](docs/SNOWFLAKE_SWAPKIT_SCHEMA.md)
+- [`dbt/README.md`](dbt/README.md) for dbt model documentation
 
 ## Development
 
 ### Common Commands
 
 ```bash
-# Run tests
-pdm run test
+# dbt commands
+pdm run dbt-debug      # Test dbt connection
+pdm run dbt-deps       # Install dbt packages
+pdm run dbt-run        # Run all models
+pdm run dbt-test       # Run data tests
+pdm run dbt-build      # Run models + tests
 
-# Run tests with coverage
-pdm run test-cov
+# Dashboard
+pdm run dashboard      # Launch multipage Streamlit app
 
-# Lint code
-pdm run lint
+# Python development
+pdm run test           # Run pytest tests
+pdm run test-cov       # Run tests with coverage
+pdm run lint           # Lint code with Ruff
+pdm run format         # Format code with Ruff
+pdm run format-check   # Check formatting
 
-# Format code
-pdm run format
-
-# Check formatting without changes
-pdm run format-check
-
-# Run dashboard
-pdm run dashboard
+# Notebooks
+pdm run notebook       # Launch JupyterLab
 ```
 
 ### Setting Up Pre-commit Hooks
@@ -429,8 +522,9 @@ For detailed validation results, run the dashboard and navigate to the "Experime
 
 - **Python 3.13**: Latest stable Python release
 - **PDM**: Modern Python dependency manager
+- **dbt**: SQL transformation and testing framework
 - **Ruff**: Ultra-fast Python linter and formatter
-- **Streamlit**: Interactive dashboard framework
+- **Streamlit**: Interactive multipage dashboard framework
 - **Snowflake**: Data warehouse and analytics platform
 - **Polars**: High-performance DataFrame library
 - **Pandas**: Data manipulation and analysis
