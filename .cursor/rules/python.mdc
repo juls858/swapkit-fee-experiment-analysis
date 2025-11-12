@@ -1,0 +1,69 @@
+---
+description: Python coding standards, PDM package management, Ruff linting, pytest conventions, and module layout for THORChain fee analysis.
+globs:
+  - "src/**/*.py"
+  - "tests/**/*.py"
+  - "*.py"
+alwaysApply: false
+---
+
+# Python Rules
+
+## Package Management
+- **Use PDM only:** `pdm add package-name`, `pdm install`, `pdm run <script>`
+- **Never use:** pip, conda, poetry
+- Pre-commit hooks must pass before commits
+
+## Style & Formatting
+- **PEP 8** with 100 character line length
+- **f-strings** over `.format()` or `%`
+- **pathlib.Path** for file operations
+- **Type hints** where beneficial (not required everywhere)
+- **UTC datetimes:** Always use timezone-aware datetimes
+
+## Imports
+Order: standard library, third-party, local (absolute under `thorchain_fee_analysis`)
+
+```python
+# Standard library
+import os
+from pathlib import Path
+
+# Third-party
+import pandas as pd
+import streamlit as st
+
+# Local
+from thorchain_fee_analysis.data import get_snowpark_session
+```
+
+## Naming Conventions
+- Functions/variables: `snake_case`
+- Classes: `PascalCase`
+- Constants: `UPPER_SNAKE_CASE`
+- Private: `_leading_underscore`
+- Allow `# noqa: N806` for conventional statistical names (e.g., `X` for design matrix)
+
+## Code Quality
+- Avoid catching broad exceptions; handle specific errors
+- Use early returns to reduce nesting
+- Write docstrings for public functions
+- Prefer composition over inheritance
+
+## Testing (pytest)
+- Use fixtures for common setup
+- Mock Snowflake connections in tests
+- Test edge cases (empty data, single observation, NaN/Inf)
+- Aim for >80% code coverage
+- Known issue: Polars segfault on Python 3.13 (mark with `@pytest.mark.skip`)
+
+## Linting & Formatting
+- Ruff handles both linting and formatting
+- Run manually: `pdm run lint` and `pdm run format`
+- Pre-commit hooks enforce all rules automatically
+
+## Module Layout
+- `src/thorchain_fee_analysis/analysis/` - Core analysis logic
+- `src/thorchain_fee_analysis/data/` - Data loading, Snowflake connection
+- `src/thorchain_fee_analysis/visualization/` - Chart builders
+- `src/thorchain_fee_analysis/utils/` - Shared utilities

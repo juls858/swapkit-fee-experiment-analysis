@@ -7,7 +7,15 @@ alwaysApply: true
 
 # THORChain Fee Experiment – Cursor Context Rules
 
-This file mirrors `docs/CURSOR_RULES.md` and is provided specifically for Cursor’s Context Rules feature. Keep both files in sync.
+This is the umbrella rule file. Scoped rules are organized in `.cursor/rules/`:
+- `python.mdc` - Python, PDM, Ruff, pytest
+- `streamlit.mdc` - Streamlit dashboard conventions
+- `dbt.mdc` - dbt model layers and documentation
+- `sql.mdc` - SQL style and Snowflake specifics
+- `visualization.mdc` - Chart best practices
+- `security.mdc` - Credential handling and guardrails
+
+Human-readable reference: `docs/CURSOR_RULES.md`
 
 ## Scope & Intent
 

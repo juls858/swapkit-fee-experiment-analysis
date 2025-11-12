@@ -1,0 +1,72 @@
+---
+description: SQL style guidelines, Snowflake-specific conventions, and query validation practices for THORChain fee analysis.
+globs:
+  - "**/*.sql"
+  - "sql/**/*"
+alwaysApply: false
+---
+
+# SQL & Snowflake Rules
+
+## SQL Style
+- Use CTEs (Common Table Expressions) for readability
+- Avoid `SELECT *` in production queries; list explicit columns
+- Use meaningful table aliases (e.g., `swaps AS s`, not `t1`)
+- Comment complex logic and business rules
+- Format dates consistently (ISO 8601: `YYYY-MM-DD`)
+
+## Snowflake Specifics
+- **Object names:** Use uppercase for Snowflake objects (`9R.FEE_EXPERIMENT.V_WEEKLY_SUMMARY_FINAL`)
+- **Normalize in Python:** After queries, always `df.columns = df.columns.str.lower()`
+- **Connection:** Use `get_snowpark_session()` from `src/thorchain_fee_analysis/data/snowflake_conn.py`
+- **Credentials:** Never hardcode; use Streamlit secrets, `~/.snowflake/connections.toml`, or env vars
+
+## Query Validation
+- **Test in Snowflake first:** Run queries directly in Snowflake before wiring into dashboard or dbt
+- **Check row counts:** Validate expected data volume
+- **Inspect nulls:** Check for unexpected NULL values
+- **Verify joins:** Ensure join keys match expected cardinality
+
+## Key Schema Objects
+- `V_WEEKLY_SUMMARY_FINAL` → Use `FCT_WEEKLY_SUMMARY_FINAL` (mart)
+- `V_ELASTICITY_INPUTS` → Use `FCT_ELASTICITY_INPUTS` (mart with lagged fields)
+- `V_FEE_PERIODS_MANUAL` → Manual fee period definitions
+- `V_SWAPS_EXPERIMENT_WINDOW` → Raw swap data
+
+## Performance
+- Use `WHERE` clauses to filter early
+- Avoid subqueries in `SELECT` list; use CTEs or joins
+- Use `LIMIT` for exploratory queries
+- Consider materialized views for frequently accessed aggregations
+
+## Comments
+- Document assumptions (e.g., "Assumes UTC timestamps")
+- Explain business logic (e.g., "Fee tier changes on Monday 00:00 UTC")
+- Note data quality issues (e.g., "Excludes swaps with NULL amounts")
+
+## Naming in SQL
+- Tables/views: `UPPER_SNAKE_CASE`
+- Columns: `lower_snake_case` (after normalization in Python)
+- Aliases: Short, meaningful (e.g., `swaps AS s`, `periods AS p`)
+
+## Common Patterns
+```sql
+-- CTE for readability
+WITH filtered_swaps AS (
+    SELECT
+        swap_id,
+        swap_date,
+        volume_usd,
+        fee_bps
+    FROM "9R".FEE_EXPERIMENT.V_SWAPS_EXPERIMENT_WINDOW
+    WHERE swap_date >= '2024-01-01'
+        AND volume_usd > 0
+)
+SELECT
+    DATE_TRUNC('week', swap_date) AS week_start,
+    COUNT(*) AS swap_count,
+    SUM(volume_usd) AS total_volume
+FROM filtered_swaps
+GROUP BY week_start
+ORDER BY week_start;
+```

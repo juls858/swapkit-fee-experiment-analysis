@@ -1,0 +1,69 @@
+---
+description: Streamlit dashboard conventions for multipage app, caching, layout, and component reuse in THORChain fee analysis.
+globs:
+  - "dashboards/app/**/*.py"
+alwaysApply: false
+---
+
+# Streamlit Dashboard Rules
+
+## Architecture
+- **Multipage app:** `dashboards/app/Home.py` is the entry point
+- **Page naming:** `N_Phase_M__Page_Title.py` (e.g., `1_Phase_1__Overview.py`, `5_Phase_2__Elasticity_Analysis.py`)
+- **Sidebar:** Organized by phase with completion indicators
+
+## Launch
+- **Command:** `pdm run dashboard` or `.venv/bin/streamlit run dashboards/app/Home.py --server.port 8501`
+- **Kill old processes first:** `pkill -9 -f "streamlit run"` if needed
+- Old single-file dashboard has been removed
+
+## Caching
+```python
+# For Snowflake connections
+@st.cache_resource(show_spinner=False)
+def get_session():
+    return get_snowpark_session()
+
+# For data queries (with TTL for live data)
+@st.cache_data(ttl=60, show_spinner=False)
+def load_data(_session: Session) -> pd.DataFrame:
+    df = _session.sql("SELECT ...").to_pandas()
+    df.columns = df.columns.str.lower()  # Always normalize
+    return df
+```
+
+## Layout
+- Use `st.columns()` for side-by-side content
+- Provide meaningful help text with `help=` parameter
+- Use expanders for optional/advanced sections
+- Set page config: `st.set_page_config(layout="wide")` for multi-column dashboards
+
+## Component Reuse
+- Shared formatting utilities in `dashboards/app/components/formatting.py`
+- Reusable chart builders in `src/thorchain_fee_analysis/visualization/charts.py`
+
+## Phase-Specific Conventions
+
+### Phase 1 (Overview)
+- Revenue metrics over time: rect + rule bars, colored by fee tier, with fee in tooltips
+- Show period start/end dates clearly
+- Aggregate metrics (no per-fee breakouts for time series where fee is independent variable)
+
+### Phase 2 (Elasticity Analysis)
+- Plot fee **changes (deltas)** as independent variable, not absolute fees
+- Prioritize revenue over volume in visualizations
+- Include model explanations and empirical comparisons
+- Clarify ceteris paribus assumptions vs. real-world confounders
+- Use collapsible "How to Read This Chart" sections
+
+## Data Loading
+- Always normalize Snowflake column names: `df.columns = df.columns.str.lower()`
+- Use marts for dashboard queries: `FCT_WEEKLY_SUMMARY_FINAL`, `FCT_ELASTICITY_INPUTS`
+- Handle empty data gracefully with clear error messages
+
+## User Experience
+- Add loading spinners for long operations
+- Provide clear error messages
+- Include help text and tooltips
+- Allow CSV downloads for tables
+- Use consistent number formatting (see `formatting.py`)

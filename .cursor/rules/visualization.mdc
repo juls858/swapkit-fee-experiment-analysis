@@ -1,0 +1,74 @@
+---
+description: Visualization best practices for Altair, Plotly, and lightweight-charts in THORChain fee analysis dashboards.
+globs:
+  - "src/thorchain_fee_analysis/visualization/**/*.py"
+  - "dashboards/app/**/*.py"
+alwaysApply: false
+---
+
+# Visualization Rules
+
+## Library Selection
+- **Altair:** Declarative charts, scatter plots, simple bar/line charts
+- **Plotly:** Interactive charts, waterfall charts, custom layouts
+- **streamlit-lightweight-charts:** Financial-grade overlays, time-series with multiple series
+
+## Chart Builders
+Centralize chart logic in `src/thorchain_fee_analysis/visualization/charts.py`:
+- `create_elasticity_scatter()` → Scatter with regression line
+- `create_fee_revenue_lightweight_chart()` → Fee change + revenue overlay
+- `create_fee_volume_lightweight_chart()` → Fee change + volume overlay
+- `create_waterfall_chart()` → Revenue decomposition waterfall
+
+## Data Visualization Principles
+- **Independent variables (fee changes) on X-axis**
+- **Dependent variables (revenue, volume) on Y-axis**
+- Handle NaN/Inf values before plotting
+- Provide "How to Read This Chart" guidance for complex visualizations
+
+## Lightweight-Charts Overlays
+- **Histograms for fee changes:** Transparent (opacity 0.3), orange color
+- **Lines for revenue/volume:** Stronger colors, full opacity
+- **Hover titles:** Include current fee tier and change context
+- **Example:** "Fee: 15 bps (+5)" for both histogram bars and lines
+
+## Color Consistency
+- Use `category10` scheme for fee tiers across Phase 1 charts
+- Orange for fee changes/deltas
+- Green for revenue (with transparency for histograms)
+- Blue for volume (with transparency for histograms)
+
+## Tooltips
+- Always include current fee tier
+- Show change (delta) for fee comparisons
+- Include metric value with proper formatting
+- Use clear units (USD, bps, %)
+
+## Axis Labels
+- Clear units in parentheses: "Revenue (USD)", "Fee Change (bps)", "Volume (%)"
+- Use proper formatting: `$1.2M`, `123 bps`, `12.3%`
+
+## Phase-Specific Conventions
+
+### Phase 1 (Overview)
+- Revenue metrics over time: rect + rule bars, colored by fee tier
+- Include fee in tooltips
+- Show period start/end dates clearly
+
+### Phase 2 (Elasticity Analysis)
+- Plot fee **changes (deltas)**, not absolute fees
+- Prioritize revenue over volume
+- Include regression lines with R² in scatter plots
+- Use collapsible sections to explain chart interpretation
+
+## Handling Edge Cases
+- Empty data: Show clear message, not blank chart
+- Single data point: Disable regression, show point only
+- NaN/Inf: Filter before plotting, log warning
+- Large numbers: Format with K/M/B suffixes
+
+## Accessibility
+- Use color + shape/pattern for differentiation
+- Provide text alternatives for key insights
+- Ensure sufficient contrast
+- Label all axes and legends clearly

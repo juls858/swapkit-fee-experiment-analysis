@@ -1,0 +1,62 @@
+---
+description: dbt model conventions, layer structure, documentation standards, and Snowflake naming for THORChain fee analysis.
+globs:
+  - "dbt/**/*.sql"
+  - "dbt/**/*.yml"
+  - "dbt/**/*.yaml"
+alwaysApply: false
+---
+
+# dbt Rules
+
+## Model Layers
+- **Staging (`stg_`):** Light transformations on sources, type casting, renaming
+- **Intermediate (`int_`):** Business logic, joins, aggregations
+- **Marts (`fct_`, `dim_`):** Final analytics-ready tables
+
+## Key Models
+- `stg_fee_periods_manual.sql` → Manual fee period staging
+- `stg_swaps_experiment_window.sql` → Swaps data staging
+- `int_daily_fee_bps.sql` → Daily fee tier calculations
+- `int_elasticity_inputs.sql` → Elasticity analysis inputs with lags
+- `int_fee_periods_final.sql` → Final period definitions
+- `fct_weekly_summary_final.sql` → Weekly aggregated metrics
+- `fct_elasticity_inputs.sql` → Mart for elasticity analysis (has lagged columns)
+- `fct_pool_weekly_summary.sql` → Pool-level breakouts
+- `fct_user_weekly_summary.sql` → User-level breakouts
+
+## Documentation
+- All models must have `schema.yml` with column descriptions
+- Use `schema.yml` in each model directory (staging, intermediate, marts)
+- Document sources in `sources.yml`
+- Include tests: `not_null`, `unique`, `relationships`, `accepted_values`
+
+## Workflow
+- **Compile models:** `cd dbt && dbt compile` (check SQL syntax)
+- **Run models:** `cd dbt && dbt run`
+- **Test models:** `cd dbt && dbt test`
+- **Build (run + test):** `pdm run dbt-build`
+- **Validate in Snowflake first:** Test queries directly before deploying
+
+## Snowflake Naming
+- Target schema: `9R.FEE_EXPERIMENT` (source) or `9R.FEE_EXPERIMENT_MARTS` (marts)
+- Use uppercase for Snowflake object names in SQL
+- Normalize to lowercase in Python after queries: `df.columns = df.columns.str.lower()`
+
+## SQL Style
+- Use CTEs for readability
+- Comment complex logic
+- Avoid `SELECT *` in production models
+- Use explicit column names
+- Format dates consistently (ISO 8601)
+
+## Materialization
+- Staging: `view` (lightweight, always fresh)
+- Intermediate: `view` or `ephemeral` (depends on reuse)
+- Marts: `table` (performance, used by dashboards)
+
+## Testing
+- Add `not_null` tests for primary keys
+- Add `unique` tests for ID columns
+- Add `relationships` tests for foreign keys
+- Add custom tests for business logic (e.g., fee_bps >= 0)

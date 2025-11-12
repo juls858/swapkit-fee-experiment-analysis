@@ -16,7 +16,7 @@ A comprehensive analysis toolkit for analyzing THORChain fee experiment data fro
 
 This project analyzes THORChain's fee experiment data to understand the impact of different fee tiers on swap volume, revenue, and user behavior. The analysis uses data from Snowflake's `9R.FEE_EXPERIMENT` schema and provides interactive visualizations through Streamlit dashboards.
 
-**📖 For AI assistants and developers:** See [Cursor Context Rules](docs/CURSOR_RULES.md). If you use Cursor’s Context Rules feature, the same content is available at `.cursor/rules.mdc` for direct ingestion by Cursor.
+**📖 For AI assistants and developers:** This repo uses [Cursor Context Rules](https://cursor.com/docs/context/rules) for AI alignment. Rules are organized in `.cursor/rules/` (machine-readable `.mdc` files with front matter) and mirrored in `docs/CURSOR_RULES.md` (human-readable). Scoped rules cover Python, Streamlit, dbt, SQL, visualization, and security.
 
 ### Key Features
 
@@ -565,7 +565,18 @@ Phase 1 focused on data validation and infrastructure:
 
 ## Documentation
 
-- **[Cursor Context Rules](docs/CURSOR_RULES.md)**: AI assistant and developer workflow guide
+### Cursor Context Rules
+- **[Human-readable guide](docs/CURSOR_RULES.md)**: Comprehensive workflow and coding standards
+- **Machine-readable rules** (`.cursor/rules/*.mdc`):
+  - `.cursor/rules.mdc` - Umbrella rule (always applied)
+  - `.cursor/rules/python.mdc` - Python, PDM, Ruff, pytest
+  - `.cursor/rules/streamlit.mdc` - Dashboard conventions
+  - `.cursor/rules/dbt.mdc` - dbt model layers
+  - `.cursor/rules/sql.mdc` - SQL/Snowflake style
+  - `.cursor/rules/visualization.mdc` - Chart best practices
+  - `.cursor/rules/security.mdc` - Credential handling
+
+### Project Documentation
 - **[Phase 2 Complete](PHASE2_COMPLETE.md)**: Elasticity analysis completion report
 - **[SQL Validation](SQL_VALIDATION_REPORT.md)**: All queries validated in Snowflake
 - **[Snowflake Schema](docs/SNOWFLAKE_SWAPKIT_SCHEMA.md)**: Database schema and query examples

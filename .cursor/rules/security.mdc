@@ -1,0 +1,89 @@
+---
+description: Security guardrails for credential handling, secrets management, and data protection in THORChain fee analysis.
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Security & Guardrails
+
+## Credential Management
+
+### Never Hardcode Credentials
+- ❌ Don't: `password = "my_password"` in code
+- ✅ Do: Use approved credential sources
+
+### Approved Credential Sources (in priority order)
+1. **Streamlit secrets:** `.streamlit/secrets.toml` (for Streamlit Cloud deployment)
+2. **Snowflake connections file:** `~/.snowflake/connections.toml` (for local dev)
+3. **Environment variables:** `SNOWFLAKE_*` env vars (for CI/CD)
+
+### Connection Helper
+Always use the shared connection module:
+```python
+from thorchain_fee_analysis.data.snowflake_conn import get_snowpark_session
+
+session = get_snowpark_session()
+```
+
+## File Protection
+
+### Never Commit
+- ❌ Credentials files: `.streamlit/secrets.toml`, `~/.snowflake/connections.toml`, `.env`
+- ❌ Data files: `*.csv`, `*.parquet`, `*.json` (except `pyproject.json`)
+- ❌ API keys, tokens, passwords
+
+### .gitignore Coverage
+The `.gitignore` already excludes:
+- `.streamlit/secrets.toml`
+- `.env`, `.env.local`
+- `*.csv`, `*.parquet`
+- Verify before committing sensitive files
+
+## Data Protection
+
+### Snowflake Data
+- Never log full query results containing PII
+- Use `LIMIT` for exploratory queries
+- Respect data access policies and roles
+
+### Local Data
+- Don't store production data locally unless necessary
+- If caching data, use temporary directories
+- Clear caches regularly
+
+## Code Review Checklist
+
+Before committing, verify:
+- [ ] No hardcoded credentials
+- [ ] No committed data files
+- [ ] No API keys or tokens in code
+- [ ] Proper use of `get_snowpark_session()`
+- [ ] Secrets files in `.gitignore`
+
+## Pre-Commit Hooks
+
+Pre-commit hooks check for:
+- Large files (prevents accidental data commits)
+- Trailing whitespace, EOF issues
+- YAML/TOML/JSON syntax
+
+## Incident Response
+
+If credentials are accidentally committed:
+1. Rotate credentials immediately
+2. Remove from git history: `git filter-branch` or BFG Repo-Cleaner
+3. Force push (coordinate with team)
+4. Update all local clones
+
+## Deployment Security
+
+### Streamlit Cloud
+- Use Streamlit secrets for credentials
+- Set appropriate access controls
+- Monitor usage logs
+
+### CI/CD
+- Use encrypted environment variables
+- Limit access to deployment pipelines
+- Rotate credentials regularly

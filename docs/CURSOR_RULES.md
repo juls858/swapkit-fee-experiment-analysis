@@ -1,5 +1,14 @@
 # THORChain Fee Experiment – Cursor Context Rules
 
+This is the human-readable reference. Machine-readable rules for Cursor are in `.cursor/rules/*.mdc`:
+- `.cursor/rules.mdc` - Umbrella rule (always applied)
+- `.cursor/rules/python.mdc` - Python, PDM, Ruff, pytest
+- `.cursor/rules/streamlit.mdc` - Streamlit dashboard conventions
+- `.cursor/rules/dbt.mdc` - dbt model layers and documentation
+- `.cursor/rules/sql.mdc` - SQL style and Snowflake specifics
+- `.cursor/rules/visualization.mdc` - Chart best practices
+- `.cursor/rules/security.mdc` - Credential handling and guardrails
+
 ## Scope & Intent
 
 This project analyzes THORChain's fee experiment to determine optimal swap fee tiers through elasticity analysis and revenue decomposition.
