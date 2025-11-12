@@ -16,6 +16,8 @@ A comprehensive analysis toolkit for analyzing THORChain fee experiment data fro
 
 This project analyzes THORChain's fee experiment data to understand the impact of different fee tiers on swap volume, revenue, and user behavior. The analysis uses data from Snowflake's `9R.FEE_EXPERIMENT` schema and provides interactive visualizations through Streamlit dashboards.
 
+**📖 For AI assistants and developers:** See [Cursor Context Rules](docs/CURSOR_RULES.md). If you use Cursor’s Context Rules feature, the same content is available at `.cursor/rules.mdc` for direct ingestion by Cursor.
+
 ### Key Features
 
 - **Phase 2 Elasticity Analysis**: Price elasticity of demand, revenue optimization, and decomposition
@@ -29,9 +31,20 @@ This project analyzes THORChain's fee experiment data to understand the impact o
 
 ## Quick Start
 
+**TL;DR** (assuming PDM and Snowflake are configured):
+```bash
+pdm install                    # Install dependencies
+pdm run dbt-build              # Build dbt models
+pdm run dashboard              # Launch dashboard at localhost:8501
+pdm run test                   # Run tests
+pdm run lint && pdm run format # Lint and format code
+```
+
+For detailed setup instructions, continue reading below.
+
 ### Prerequisites
 
-- **Python 3.12+** (you have 3.12.8 ✅)
+- **Python 3.12+** (3.13 recommended)
 - **PDM** (Python Dependency Manager) - will install below
 - **Snowflake account** with access to `9R.FEE_EXPERIMENT` schema
 
@@ -536,8 +549,25 @@ Phase 1 focused on data validation and infrastructure:
 - New features require tests
 - Update documentation for user-facing changes
 
+## Known Issues
+
+### Polars Segfault on Python 3.13
+- **Issue:** Polars may cause segmentation faults during pytest runs on Python 3.13
+- **Impact:** Some tests are skipped with `@pytest.mark.skip`
+- **Workaround:** Tests are marked as known issues; functionality is validated through manual testing
+- **Status:** Tracking upstream Polars compatibility with Python 3.13
+- **Reference:** See test files for specific skipped tests with detailed comments
+
+### Dashboard Process Management
+- **Issue:** Old single-file dashboard processes may conflict with multipage app
+- **Solution:** Kill old processes before launching: `pkill -9 -f "streamlit run"`
+- **Prevention:** Always use `pdm run dashboard` which launches the correct multipage app
+
 ## Documentation
 
+- **[Cursor Context Rules](docs/CURSOR_RULES.md)**: AI assistant and developer workflow guide
+- **[Phase 2 Complete](PHASE2_COMPLETE.md)**: Elasticity analysis completion report
+- **[SQL Validation](SQL_VALIDATION_REPORT.md)**: All queries validated in Snowflake
 - **[Snowflake Schema](docs/SNOWFLAKE_SWAPKIT_SCHEMA.md)**: Database schema and query examples
 - **[SwapKit Overview](docs/SWAPKIT_DATASHARE.md)**: SwapKit business context
 - **[BigQuery Dictionary](docs/swapkit_bigquery_data_dictionary.md)**: BigQuery data source documentation

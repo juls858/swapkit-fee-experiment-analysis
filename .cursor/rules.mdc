@@ -1,0 +1,82 @@
+---
+description: THORChain Fee Experiment – Cursor Context Rules. Align AI behavior with repo workflow, coding standards, data practices, and dashboard/dbt conventions.
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# THORChain Fee Experiment – Cursor Context Rules
+
+This file mirrors `docs/CURSOR_RULES.md` and is provided specifically for Cursor’s Context Rules feature. Keep both files in sync.
+
+## Scope & Intent
+
+This project analyzes THORChain's fee experiment to determine optimal swap fee tiers through elasticity analysis and revenue decomposition.
+
+Current Status:
+- Phase 1: Complete (data validation)
+- Phase 2: Complete (elasticity analysis & revenue decomposition)
+- Phase 3: Planned (statistical testing)
+- Phase 4: Planned (pool-level & user-level analysis)
+
+Focus Areas:
+- Price elasticity of demand (PED) and revenue elasticity
+- Revenue decomposition: fee rate, volume, mix, and external effects
+- Interactive Streamlit dashboard with multipage architecture
+- dbt data transformation pipeline in Snowflake
+
+## Technology Stack & Defaults
+- Python 3.13, PDM
+- Polars preferred, Pandas for compatibility
+- Snowflake (`9R.FEE_EXPERIMENT`), dbt
+- Streamlit multipage app
+- Altair, Plotly, streamlit-lightweight-charts
+- Ruff, pytest
+
+## Workflow
+- Use PDM only; pre-commit must pass
+- Launch multipage app (`dashboards/app/Home.py`); kill old processes first
+- Normalize Snowflake column names to lowercase
+- Validate SQL/dbt in Snowflake before wiring UI
+
+## Coding Standards
+- PEP 8 (100 cols), f-strings, `pathlib.Path`, UTC datetimes
+- Imports: stdlib, third-party, local (absolute under `thorchain_fee_analysis`)
+- Allow `# noqa: N806` for conventional matrix names (e.g., `X`)
+
+## Data & Snowflake
+- Use `get_snowpark_session()` from `src/thorchain_fee_analysis/data/snowflake_conn.py`
+- Creds: Streamlit secrets, `~/.snowflake/connections.toml`, env vars
+- Cache: `@st.cache_resource` for session; `@st.cache_data` for queries (TTL for live)
+
+## dbt Conventions
+- Staging → Intermediate → Marts with schema YAML
+- Key marts: `FCT_ELASTICITY_INPUTS`, `FCT_WEEKLY_SUMMARY_FINAL`
+
+## Dashboard Guidelines
+- Reusable chart builders in `src/thorchain_fee_analysis/visualization/charts.py`
+- Phase 1 revenue over time: rect + rule bars colored by fee; fee in tooltips
+- Plot fee deltas (independent) vs revenue/volume (dependent)
+- Lightweight-charts: transparent histograms for deltas; lines for revenue/volume; informative hover titles
+
+## Visualization Best Practices
+- Altair (declarative), Plotly (interactive/waterfall), lightweight-charts (overlays)
+- Tooltips include current fee tier and delta context
+
+## Testing & Quality
+- pytest with fixtures; mock Snowflake; >80% coverage goal
+- Ruff lint/format; pre-commit hooks enforced
+- Known issue: Polars segfault on Python 3.13 (skip affected tests)
+
+## Do / Don’t
+- Do: PDM, cache, validate SQL, centralize charts, write tests, UTC, lowercase columns
+- Don’t: pip/conda/poetry, hardcode creds, commit data files, bypass pre-commit, extrapolate beyond tested range, plot absolute fees when analyzing changes
+
+## Helpful Commands (PDM)
+```bash
+pdm install
+pdm run dashboard
+pdm run dbt-build
+pdm run test
+pdm run lint && pdm run format
+```
