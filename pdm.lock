@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = []
 lock_version = "4.5.0"
-content_hash = "sha256:07cbcb6dfbad4156c305d039aecc481675d20f9f913a3e148361c98b233e0ded"
+content_hash = "sha256:451f616dc19587c983423a35836c8519e85eb7b46c20d1a35809fc94b73ee485"
 
 [[metadata.targets]]
 requires_python = ">=3.12,<3.14"
@@ -2019,6 +2019,18 @@ dependencies = [
 files = [
     {file = "streamlit-1.51.0-py3-none-any.whl", hash = "sha256:4008b029f71401ce54946bb09a6a3e36f4f7652cbb48db701224557738cfda38"},
     {file = "streamlit-1.51.0.tar.gz", hash = "sha256:1e742a9c0b698f466c6f5bf58d333beda5a1fbe8de660743976791b5c1446ef6"},
+]
+
+[[package]]
+name = "streamlit-lightweight-charts"
+version = "0.7.20"
+summary = ""
+dependencies = [
+    "streamlit",
+]
+files = [
+    {file = "streamlit-lightweight-charts-0.7.20.tar.gz", hash = "sha256:1341348b8286c23975246b391956295c70cb315c06eaec9a51b31e5bcf774ef5"},
+    {file = "streamlit_lightweight_charts-0.7.20-py3-none-any.whl", hash = "sha256:61e0edc669dac626176a16da173414f577161f28107a3475762640d5665c7fe4"},
 ]
 
 [[package]]

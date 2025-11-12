@@ -1,0 +1,68 @@
+version: 2
+
+models:
+  - name: stg_swaps_experiment_window
+    description: >
+      Normalized swaps for fee experiment window (2025-08-15 to 2025-10-31).
+      Includes calculated effective_fee_bps, date dimensions, and swap classifications.
+    columns:
+      - name: tx_id
+        description: Unique transaction identifier
+        tests:
+          - not_null
+          - unique
+      - name: block_timestamp
+        description: Timestamp when swap occurred
+        tests:
+          - not_null
+      - name: swap_date
+        description: Date of swap (for period assignment)
+        tests:
+          - not_null
+      - name: gross_volume_usd
+        description: Maximum of from_amount_usd and to_amount_usd
+        tests:
+          - not_null
+      - name: effective_fee_bps
+        description: Effective fee in basis points (capped at 500)
+        tests:
+          - not_null
+      - name: from_address
+        description: Blockchain address initiating the swap
+      - name: pool_name
+        description: Pool used for the swap
+
+  - name: stg_fee_periods_manual
+    description: >
+      Manual fee periods derived from authoritative block heights.
+      Anchored at experiment start (2025-08-15) with 5 bps initial fee.
+    columns:
+      - name: period_id
+        description: Sequential period identifier
+        tests:
+          - not_null
+          - unique
+      - name: period_start_date
+        description: Start timestamp of fee period (inclusive)
+        tests:
+          - not_null
+      - name: period_end_date
+        description: End timestamp of fee period (exclusive)
+        tests:
+          - not_null
+      - name: intended_fee_bps
+        description: Intended fee tier in basis points
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 5, 10, 15, 25]
+      - name: days_in_period
+        description: Number of days in the period
+        tests:
+          - not_null
+      - name: source
+        description: Source of period definition (always 'manual')
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['manual']

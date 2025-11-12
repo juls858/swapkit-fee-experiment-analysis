@@ -1,0 +1,99 @@
+version: 2
+
+models:
+  - name: fct_weekly_summary_final
+    description: >
+      Primary fact table for dashboard consumption. Weekly/period summary metrics
+      computed using final fee periods (manual block heights).
+
+      Grain: One row per fee period
+    columns:
+      - name: period_id
+        description: Sequential period identifier
+        tests:
+          - not_null
+          - unique
+      - name: period_start_date
+        description: Start date of fee period
+        tests:
+          - not_null
+      - name: period_end_date
+        description: End date of fee period
+        tests:
+          - not_null
+      - name: final_fee_bps
+        description: Intended fee tier for this period in basis points
+        tests:
+          - not_null
+      - name: swaps_count
+        description: Total number of swaps in period
+        tests:
+          - not_null
+      - name: volume_usd
+        description: Total swap volume in USD
+        tests:
+          - not_null
+      - name: fees_usd
+        description: Total fees collected in USD
+        tests:
+          - not_null
+      - name: unique_swappers
+        description: Count of distinct user addresses
+        tests:
+          - not_null
+      - name: realized_fee_bps
+        description: Actual fee rate realized (fees/volume * 10000)
+      - name: revenue_per_swap_usd
+        description: Average fee revenue per swap
+      - name: revenue_per_user_usd
+        description: Average fee revenue per unique swapper
+
+  - name: fct_elasticity_inputs
+    description: >
+      Elasticity analysis inputs for Phase 2 revenue analysis.
+      Contains period-over-period changes, lagged metrics, and mix effects
+      for calculating price elasticity of demand and revenue decomposition.
+
+      Grain: One row per fee period transition (excludes first period)
+    columns:
+      - name: period_id
+        description: Sequential period identifier
+        tests:
+          - not_null
+          - unique
+      - name: period_start_date
+        description: Start date of fee period
+        tests:
+          - not_null
+      - name: final_fee_bps
+        description: Current period fee tier in basis points
+        tests:
+          - not_null
+      - name: prev_fee_bps
+        description: Previous period fee tier in basis points
+        tests:
+          - not_null
+      - name: pct_change_fee_bps
+        description: Percentage change in fee tier from previous period
+        tests:
+          - not_null
+      - name: pct_change_volume
+        description: Percentage change in volume from previous period
+        tests:
+          - not_null
+      - name: pct_change_fees
+        description: Percentage change in fees from previous period
+        tests:
+          - not_null
+      - name: volume_usd
+        description: Current period total swap volume in USD
+        tests:
+          - not_null
+      - name: fees_usd
+        description: Current period total fees collected in USD
+        tests:
+          - not_null
+      - name: time_trend
+        description: Sequential time index for regression controls
+        tests:
+          - not_null

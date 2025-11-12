@@ -1,1 +1,1 @@
-"""Visualization and charting modules."""
+"""Visualization utilities for THORChain fee analysis."""

@@ -1,0 +1,77 @@
+name: 'thorchain_fee_experiment'
+version: '1.0.0'
+profile: '9R'
+
+config-version: 2
+
+# These configurations specify where dbt should look for different types of files
+model-paths: ['models']
+analysis-paths: ['analyses']
+test-paths: ['tests']
+seed-paths: ['seeds']
+macro-paths: ['macros']
+snapshot-paths: ['snapshots']
+
+clean-targets:
+  - 'target'
+  - 'dbt_packages'
+
+quoting:
+  database: true  # Set to true to quote the database name
+
+# Configure default materialization and schema settings
+models:
+  thorchain_fee_experiment:
+    # Default to view materialization
+    +materialized: view
+
+    # All models deploy to FEE_EXPERIMENT schema (matching legacy)
+    staging:
+      +schema: fee_experiment
+      +materialized: view
+      # Staging models keep stg_ prefix, not exposed to end users
+      stg_swaps_experiment_window:
+        +alias: V_SWAPS_EXPERIMENT_WINDOW
+      stg_fee_periods_manual:
+        +alias: V_FEE_PERIODS_MANUAL
+
+    # Intermediate models for transformations
+    intermediate:
+      +schema: fee_experiment
+      +materialized: view
+      int_daily_fee_bps:
+        +alias: V_DAILY_FEE_BPS
+      int_fee_periods_final:
+        +alias: V_FEE_PERIODS_FINAL
+
+    # Final marts for consumption by dashboards
+    marts:
+      +schema: fee_experiment
+      +materialized: view
+      # Map to existing view names for backward compatibility
+      fct_weekly_summary_final:
+        +materialized: table
+        +alias: V_WEEKLY_SUMMARY_FINAL
+      fct_pool_weekly_summary:
+        +alias: V_POOL_WEEKLY_SUMMARY
+      fct_user_weekly_summary:
+        +alias: V_USER_WEEKLY_SUMMARY
+
+# Configure seeds
+seeds:
+  thorchain_fee_experiment:
+    +schema: fee_experiment
+    +quote_columns: false
+
+# Configure snapshots
+snapshots:
+  thorchain_fee_experiment:
+    +target_schema: snapshots
+    +strategy: timestamp
+    +updated_at: 'updated_at'
+
+# Configure tests
+tests:
+  thorchain_fee_experiment:
+    +store_failures: true
+    +schema: test_results

@@ -1,0 +1,170 @@
+"""
+User Analysis Page - User behavior and cohort analysis
+"""
+
+import sys
+from pathlib import Path
+
+import altair as alt
+import pandas as pd
+import streamlit as st
+from snowflake.snowpark import Session
+
+# Add src to path for imports
+src_path = Path(__file__).parent.parent.parent.parent / "src"
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
+
+from thorchain_fee_analysis.data.snowflake_conn import get_snowpark_session as _get_session
+
+# Import formatting utilities
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from components.formatting import format_currency, format_number
+
+st.set_page_config(page_title="User Analysis", page_icon="👥", layout="wide")
+
+
+@st.cache_resource(show_spinner=False)
+def get_snowpark_session() -> Session:
+    return _get_session()
+
+
+@st.cache_data(show_spinner=False, ttl=60)
+def load_user_summary(_session: Session) -> pd.DataFrame:
+    sql = 'SELECT * FROM "9R".FEE_EXPERIMENT.V_USER_WEEKLY_SUMMARY ORDER BY period_start_date, volume_usd DESC'
+    df = _session.sql(sql).to_pandas()
+    df.columns = df.columns.str.lower()
+    return df
+
+
+@st.cache_data(show_spinner=False, ttl=60)
+def load_weekly_summary(_session: Session) -> pd.DataFrame:
+    sql = 'SELECT * FROM "9R".FEE_EXPERIMENT.V_WEEKLY_SUMMARY_FINAL ORDER BY period_start_date'
+    df = _session.sql(sql).to_pandas()
+    df.columns = df.columns.str.lower()
+    return df
+
+
+def main():
+    st.title("👥 User Analysis")
+    st.caption("User behavior and cohort analysis across fee tiers")
+
+    try:
+        session = get_snowpark_session()
+        user_df = load_user_summary(session)
+        weekly_df = load_weekly_summary(session)
+    except Exception as e:
+        st.error(f"Failed to load data: {e}")
+        st.stop()
+
+    if user_df.empty or weekly_df.empty:
+        st.warning("No data available")
+        st.stop()
+
+    # User cohorts over time
+    st.subheader("User Cohorts by Period")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric("Total Unique Users", format_number(user_df["user_address"].nunique()))
+
+    with col2:
+        avg_swaps = user_df.groupby("user_address")["swaps_count"].sum().mean()
+        st.metric("Avg Swaps per User", f"{avg_swaps:.1f}")
+
+    st.markdown("---")
+
+    # New vs Returning
+    st.subheader("New vs. Returning Users")
+
+    chart_cohorts = (
+        alt.Chart(weekly_df)
+        .transform_fold(["new_swappers", "returning_swappers"], as_=["cohort", "count"])
+        .mark_bar()
+        .encode(
+            x=alt.X("period_start_date:T", title="Period Start"),
+            y=alt.Y("count:Q", title="User Count"),
+            color=alt.Color("cohort:N", title="Cohort"),
+            tooltip=[
+                "period_id:N",
+                "final_fee_bps:Q",
+                "cohort:N",
+                "count:Q",
+            ],
+        )
+        .properties(height=400)
+    )
+
+    st.altair_chart(chart_cohorts, use_container_width=True)
+
+    st.markdown("---")
+
+    # User engagement distribution
+    st.subheader("User Engagement Distribution")
+
+    engagement_df = (
+        user_df.groupby(["period_id", "period_start_date", "final_fee_bps", "engagement_level"])
+        .size()
+        .reset_index(name="user_count")
+    )
+
+    chart_engagement = (
+        alt.Chart(engagement_df)
+        .mark_bar()
+        .encode(
+            x=alt.X("period_start_date:T", title="Period Start"),
+            y=alt.Y("user_count:Q", title="User Count", stack="normalize"),
+            color=alt.Color("engagement_level:N", title="Engagement Level"),
+            tooltip=[
+                "period_id:N",
+                "final_fee_bps:Q",
+                "engagement_level:N",
+                "user_count:Q",
+            ],
+        )
+        .properties(height=400)
+    )
+
+    st.altair_chart(chart_engagement, use_container_width=True)
+
+    st.markdown("---")
+
+    # Top users
+    st.subheader("Top Users by Volume")
+
+    top_users = (
+        user_df.groupby("user_address")
+        .agg({"volume_usd": "sum", "swaps_count": "sum", "fees_usd": "sum"})
+        .nlargest(20, "volume_usd")
+        .reset_index()
+    )
+
+    top_users["volume_usd_fmt"] = top_users["volume_usd"].apply(lambda x: format_currency(x, 0))
+    top_users["fees_usd_fmt"] = top_users["fees_usd"].apply(lambda x: format_currency(x, 0))
+
+    st.dataframe(
+        top_users[["user_address", "swaps_count", "volume_usd_fmt", "fees_usd_fmt"]].rename(
+            columns={
+                "user_address": "User Address",
+                "swaps_count": "Total Swaps",
+                "volume_usd_fmt": "Total Volume",
+                "fees_usd_fmt": "Total Fees",
+            }
+        ),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    # Download
+    csv = user_df.to_csv(index=False)
+    st.download_button(
+        label="📥 Download User Data CSV",
+        data=csv,
+        file_name="user_analysis.csv",
+        mime="text/csv",
+    )
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,19 @@
+version: 2
+
+seeds:
+  - name: fee_periods_manual_blocks
+    description: >
+      Manual block heights where fee tier changes occurred during the experiment.
+      These are the authoritative block heights provided by the THORChain team.
+    columns:
+      - name: block_id
+        description: Block height where fee change took effect
+        tests:
+          - not_null
+          - unique
+      - name: intended_fee_bps
+        description: Intended fee tier in basis points at this block
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 5, 10, 15, 25]

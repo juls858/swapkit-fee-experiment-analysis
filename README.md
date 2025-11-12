@@ -6,9 +6,11 @@ A comprehensive analysis toolkit for analyzing THORChain fee experiment data fro
 
 > ✅ **Setup Validated:** All dependencies installed, tests passing, linting clean. See [SETUP_COMPLETE.md](SETUP_COMPLETE.md) for details.
 
-- ✅ **Phase 1**: Complete - Data validation and infrastructure setup
-- ✅ **Phase 2**: Complete - dbt + multipage Streamlit dashboard
-- 📋 **Phase 3**: Planned - Statistical analysis and elasticity modeling
+- ✅ **Phase 1**: Complete - Data Foundation & Descriptive Analytics
+- ✅ **Phase 2**: Complete - Core Revenue Analysis (Elasticity & Decomposition)
+- 📋 **Phase 3**: Planned - User Behavior & Segmentation
+- 📋 **Phase 4**: Planned - Pool & Asset Analysis
+- 📋 **Phase 5**: Planned - Statistical Validation & Modeling
 
 ## Overview
 
@@ -16,12 +18,14 @@ This project analyzes THORChain's fee experiment data to understand the impact o
 
 ### Key Features
 
+- **Phase 2 Elasticity Analysis**: Price elasticity of demand, revenue optimization, and decomposition
+- **Optimal Fee Recommendation**: Data-driven fee tier recommendation with confidence intervals
+- **Revenue Decomposition**: Waterfall analysis of fee rate, volume, mix, and external effects
+- **Multipage Dashboard**: Interactive Streamlit app with 5 analysis pages
 - **dbt Data Pipeline**: SQL transformations organized in staging/intermediate/marts layers
-- **Multipage Dashboard**: Interactive Streamlit app with separate pages for weekly, pool, and user analysis
 - **Data Quality**: Automated dbt tests ensure data integrity
 - **Robust Connection**: Snowflake connection with multiple authentication methods
-- **High Performance**: Leverages Polars for efficient data processing
-- **Modern Python**: Built with Python 3.13, PDM, dbt, and the Astral toolchain (Ruff, uv)
+- **Modern Python**: Built with Python 3.13, PDM, and the Astral toolchain (Ruff, uv)
 
 ## Quick Start
 
@@ -249,10 +253,12 @@ pdm run dashboard
 ```
 
 **First-time tips:**
-- Dashboard loads data from dbt-created marts in Snowflake
-- Use sidebar to navigate between pages: Weekly Summary, Pool Analysis, User Analysis
+- Dashboard loads data from Snowflake views in `9R.FEE_EXPERIMENT` and `9R.FEE_EXPERIMENT_MARTS`
+- **Phase 1 Pages**: Weekly Summary, Data Validation
+- **Phase 2 Page**: Elasticity Analysis (price elasticity, optimal fee, revenue decomposition)
 - Use filters to explore different date ranges and fee tiers
-- Download CSV exports using the download button on each page
+- Download CSV exports and Markdown reports using download buttons
+- Phase 3 & 4 pages are planned but not yet implemented
 
 ### Troubleshooting Installation
 
@@ -476,6 +482,27 @@ This project uses:
 
 The codebase is automatically formatted on commit via pre-commit hooks.
 
+## Phase 2 Results - Elasticity Analysis
+
+Phase 2 delivers revenue optimization through elasticity analysis:
+
+✅ **Deliverables**:
+- **Price Elasticity of Demand (PED)**: Measures volume sensitivity to fee changes
+- **Revenue Elasticity**: Quantifies revenue impact of fee adjustments
+- **Optimal Fee Recommendation**: Data-driven fee tier with 95% confidence intervals
+- **Revenue Decomposition**: Waterfall analysis breaking down fee rate, volume, mix, and external effects
+- **Interactive Dashboard Page**: Visualizations, KPIs, and downloadable Markdown report
+- **Comprehensive Tests**: 25+ unit tests for elasticity and decomposition modules
+
+**Key Capabilities**:
+- Bootstrap confidence intervals for statistical rigor
+- OLS regression with time trend controls
+- Period-over-period decomposition analysis
+- Downloadable analysis report in Markdown format
+
+**Access Phase 2 Results**:
+Run the dashboard (`pdm run dashboard`) and navigate to "📊 Elasticity Analysis" page.
+
 ## Phase 1 Results
 
 Phase 1 focused on data validation and infrastructure:
@@ -490,8 +517,6 @@ Phase 1 focused on data validation and infrastructure:
 - 100% of manual fee periods validated successfully
 - Average realized fees within 1 basis point of intended fees
 - Data quality suitable for statistical analysis
-
-For detailed validation results, run the dashboard and navigate to the "Experiment Validation" section.
 
 ## Contributing
 

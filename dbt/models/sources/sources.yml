@@ -1,0 +1,70 @@
+version: 2
+
+sources:
+  - name: thorchain_defi
+    description: >
+      THORChain DeFi data including fact swaps and pool information
+    database: THORCHAIN
+    schema: DEFI
+    tables:
+      - name: FACT_SWAPS
+        description: >
+          Comprehensive swap transactions on THORChain including fees, amounts,
+          and metadata. Source for experiment window swaps.
+        columns:
+          - name: FACT_SWAPS_ID
+            description: Primary key for swap transactions
+          - name: BLOCK_TIMESTAMP
+            description: Timestamp when swap occurred
+          - name: FROM_ASSET
+            description: Asset being sold
+          - name: TO_ASSET
+            description: Asset being bought
+          - name: FROM_AMOUNT_USD
+            description: USD value of sell amount
+          - name: TO_AMOUNT_USD
+            description: USD value of buy amount
+          - name: LIQ_FEE_RUNE_USD
+            description: Liquidity fee in USD
+
+  - name: thorchain_core
+    description: >
+      THORChain core blockchain data
+    database: THORCHAIN
+    schema: CORE
+    tables:
+      - name: DIM_BLOCK
+        description: >
+          Block dimension table with block heights and timestamps for converting
+          manual block heights to timestamps.
+        columns:
+          - name: BLOCK_ID
+            description: Block height/number
+          - name: BLOCK_TIMESTAMP
+            description: Timestamp when block was created
+
+  - name: fee_experiment_base
+    description: >
+      Base views created for the fee experiment. These are the outputs of the
+      original SQL pipeline that will be replaced by dbt models.
+    database: "9R"
+    schema: FEE_EXPERIMENT
+    tables:
+      - name: V_SWAPS_EXPERIMENT_WINDOW
+        description: >
+          Normalized swaps for fee experiment window (2025-08-15 to 2025-10-31).
+          Includes calculated effective_fee_bps, date dimensions, and classifications.
+
+      - name: V_WEEKLY_SUMMARY_FINAL
+        description: >
+          Final weekly aggregations by fee tier for dashboard consumption.
+          Already materialized in Snowflake.
+
+      - name: V_FEE_PERIODS_MANUAL
+        description: >
+          Manual fee period definitions from block heights.
+          Converts block heights to timestamps and creates period boundaries.
+
+      - name: V_PERIOD_REVENUE_CI
+        description: >
+          Revenue confidence intervals by period for statistical analysis.
