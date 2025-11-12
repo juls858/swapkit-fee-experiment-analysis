@@ -1,93 +1,122 @@
 # THORChain Fee Experiment Dashboards
 
-This directory contains multiple Streamlit dashboards for different phases and aspects of the THORChain fee experiment analysis.
+This directory contains the **multipage Streamlit application** for THORChain fee experiment analysis. The dashboard is organized by analysis phase with a central navigation hub.
 
-## Available Dashboards
+## Architecture
 
-### Phase 1: Data Validation
-**File:** `phase1_data_validation.py`
+**Multipage App Structure:**
+```
+dashboards/app/
+├── Home.py                               # Main entry point (hero metrics + navigation)
+├── pages/
+│   ├── 1_Phase_1__Overview.py           # Phase 1: Weekly summary + data validation
+│   ├── 5_Phase_2__Elasticity_Analysis.py # Phase 2: Elasticity & revenue decomposition
+│   ├── 6_Phase_4__Pool_Analysis.py.disabled  # Phase 4: Pool-level (planned)
+│   └── 7_Phase_3__User_Analysis.py.disabled  # Phase 3: User-level (planned)
+└── components/
+    ├── __init__.py
+    └── formatting.py                     # Shared formatting utilities
+```
 
-**Purpose:** Validate data quality and experiment design integrity
+**Launch the Dashboard:**
+```bash
+pdm run dashboard
+# Runs: streamlit run dashboards/app/Home.py --server.port 8501
+```
+
+The app will open at **http://localhost:8501**
+
+## Available Pages
+
+### Home (Entry Point)
+**File:** `app/Home.py`
+
+**Purpose:** Hero metrics and phase navigation
 
 **Features:**
-- Weekly swap volume and revenue metrics
-- Fee tier period visualization
-- Revenue confidence intervals
-- Experiment timeline validation
-- Pool-level analysis
-- Data quality checks
+- Total volume, fees, swaps, and average fee tier KPIs
+- Navigation organized by phase with completion indicators
+- Links to Phase 1, Phase 2, and future phases
 
-**Launch:**
-```bash
-pdm run phase1
-# or
-pdm run dashboard  # default
-# or
-streamlit run dashboards/phase1_data_validation.py
-```
+---
+
+### Phase 1: Overview
+**File:** `app/pages/1_Phase_1__Overview.py`
+
+**Status:** ✅ Complete
+
+**Purpose:** Weekly summary and data validation
+
+**Features:**
+- Summary statistics by period
+- Period details table with filters
+- Volume and fees by fee tier (grouped bar charts)
+- Revenue metrics over time (rect + rule bars colored by fee tier, fee in tooltips)
+- Revenue per swap and per user trends
+- Data validation section
 
 **Data Sources:**
-- `V_WEEKLY_SUMMARY_FINAL` - Aggregated weekly metrics
+- `FCT_WEEKLY_SUMMARY_FINAL` - Weekly aggregated metrics
 - `V_FEE_PERIODS_MANUAL` - Experiment period definitions
-- `V_PERIOD_REVENUE_CI` - Revenue confidence intervals
 
 ---
 
-### Phase 2: Revenue Analysis (Planned)
-**File:** `phase2_revenue_analysis.py` (to be created)
+### Phase 2: Elasticity Analysis
+**File:** `app/pages/5_Phase_2__Elasticity_Analysis.py`
 
-**Purpose:** Deep dive into revenue patterns and optimization
+**Status:** ✅ Complete
 
-**Planned Features:**
-- Revenue by fee tier comparison
-- Pool-specific revenue analysis
-- Affiliate impact analysis
-- Time-series revenue trends
-- Breakeven analysis
-- Revenue forecasting
-
-**Launch:**
-```bash
-pdm run phase2
-```
-
----
-
-### Phase 3: Statistical Analysis (Planned)
-**File:** `phase3_statistical_analysis.py` (to be created)
-
-**Purpose:** Statistical tests and elasticity modeling
-
-**Planned Features:**
-- Demand elasticity calculations
-- Statistical significance tests
-- A/B test analysis
-- Causal inference models
-- Sensitivity analysis
-- Recommendation engine
-
-**Launch:**
-```bash
-pdm run phase3
-```
-
----
-
-### Main Landing Page (Planned)
-**File:** `main.py` (to be created)
-
-**Purpose:** Navigation hub for all dashboards
+**Purpose:** Price elasticity of demand and revenue optimization
 
 **Features:**
-- Overview of all available dashboards
-- Quick links to each phase
-- Project status summary
-- Data freshness indicators
+- Elasticity scatter plots with regression lines (fee change vs. volume/revenue)
+- OLS regression results (PED, revenue elasticity, R²)
+- Optimal fee recommendation with caveats
+- Empirical best performance comparison
+- Revenue decomposition waterfall chart (fee rate, volume, mix, external effects)
+- Period-by-period change analysis
+- Interactive lightweight-charts overlays (fee changes as histograms, revenue/volume as lines)
+- Collapsible "How to Read This Chart" sections with formulas and interpretation
 
-**Launch:**
-```bash
-pdm run dashboards
-```
+**Data Sources:**
+- `FCT_ELASTICITY_INPUTS` - Elasticity analysis inputs with lagged columns
+- `FCT_WEEKLY_SUMMARY_FINAL` - Weekly aggregated metrics
+
+**Chart Builders Used:**
+- `create_elasticity_scatter()` - Scatter with regression line
+- `create_fee_revenue_lightweight_chart()` - Fee change + revenue overlay
+- `create_fee_volume_lightweight_chart()` - Fee change + volume overlay
+- `create_waterfall_chart()` - Revenue decomposition
+
+---
+
+### Phase 3: User Analysis (Planned)
+**File:** `app/pages/7_Phase_3__User_Analysis.py.disabled`
+
+**Status:** 📋 Planned
+
+**Purpose:** User behavior and segmentation
+
+**Planned Features:**
+- User cohort analysis
+- Retention and churn metrics
+- User lifetime value by fee tier
+- Segmentation by behavior patterns
+
+---
+
+### Phase 4: Pool Analysis (Planned)
+**File:** `app/pages/6_Phase_4__Pool_Analysis.py.disabled`
+
+**Status:** 📋 Planned
+
+**Purpose:** Pool-level performance breakouts
+
+**Planned Features:**
+- Pool-specific volume and revenue trends
+- Asset pair elasticity analysis
+- Liquidity depth impact
+- Pool concentration metrics
 
 ---
 
