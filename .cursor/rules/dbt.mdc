@@ -60,3 +60,18 @@ alwaysApply: false
 - Add `unique` tests for ID columns
 - Add `relationships` tests for foreign keys
 - Add custom tests for business logic (e.g., fee_bps >= 0)
+
+## Phase 3 Updates (Lessons Learned)
+
+- Permissions fallback:
+  - If marts/views cannot be created due to Snowflake permissions, assemble required datasets in Python from approved views only:
+    - `"9R".FEE_EXPERIMENT.V_SWAPS_EXPERIMENT_WINDOW`
+    - `"9R".FEE_EXPERIMENT.V_FEE_PERIODS_MANUAL`
+  - Do not block implementation on CREATE VIEW; document the SQL→Python equivalence in the model README.
+- Validation expectations for user-period marts:
+  - Enforce uniqueness on `(user_address, period_id)`.
+  - No negative values in `volume_usd`, `fees_usd`, or `swaps_count`.
+  - Fee tiers must be in {1, 5, 10, 15, 25}.
+  - Reconcile user-level aggregates vs weekly within ±0.5% (volume, fees, swaps, unique users).
+- Naming:
+  - Use intended/final fee column names consistently; prefer `intended_fee_bps` in manual periods and normalize to `final_fee_bps` in marts.

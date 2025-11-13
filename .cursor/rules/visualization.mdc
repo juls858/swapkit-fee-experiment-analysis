@@ -33,7 +33,12 @@ Centralize chart logic in `src/thorchain_fee_analysis/visualization/charts.py`:
 - **Example:** "Fee: 15 bps (+5)" for both histogram bars and lines
 
 ## Color Consistency
-- Use `category10` scheme for fee tiers across Phase 1 charts
+- Fee tiers must map to a consistent palette across all charts and pages:
+  - 1 bps → `#1f77b4`
+  - 5 bps → `#ff7f0e`
+  - 10 bps → `#2ca02c`
+  - 15 bps → `#d62728`
+  - 25 bps → `#9467bd`
 - Orange for fee changes/deltas
 - Green for revenue (with transparency for histograms)
 - Blue for volume (with transparency for histograms)
@@ -60,6 +65,11 @@ Centralize chart logic in `src/thorchain_fee_analysis/visualization/charts.py`:
 - Prioritize revenue over volume
 - Include regression lines with R² in scatter plots
 - Use collapsible sections to explain chart interpretation
+
+## Phase 3 Updates
+- Use small multiples or tabs for horizon/discount sensitivity (LTV).
+- Default currency formatting in tooltips and tables; percentages at .1–.2 precision.
+- Centralize formatters and fee-tier color mapping in `dashboards/app/components/formatting.py` for reuse by all pages.
 
 ## Handling Edge Cases
 - Empty data: Show clear message, not blank chart

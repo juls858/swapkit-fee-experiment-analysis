@@ -97,3 +97,127 @@ models:
         description: Sequential time index for regression controls
         tests:
           - not_null
+
+  - name: fct_pool_weekly_summary
+    description: >
+      Pool-level summary metrics by fee period.
+      Provides pool-specific performance and market share metrics
+      for analyzing which pools are most sensitive to fee changes.
+
+      Grain: One row per pool per fee period
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - period_id
+            - pool_name
+    columns:
+      - name: period_id
+        description: Sequential period identifier
+        tests:
+          - not_null
+      - name: pool_name
+        description: Pool identifier (e.g., BTC.BTC, ETH.ETH)
+        tests:
+          - not_null
+      - name: pool_type
+        description: Pool classification (BTC Pool, ETH Pool, Stablecoin Pool, Other Pool)
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['BTC Pool', 'ETH Pool', 'Stablecoin Pool', 'Other Pool']
+      - name: final_fee_bps
+        description: Fee tier for this period in basis points
+        tests:
+          - not_null
+          - accepted_values:
+              values: [5, 10, 15, 20, 25]
+      - name: volume_usd
+        description: Pool volume in USD for this period
+        tests:
+          - not_null
+      - name: fees_usd
+        description: Pool fees collected in USD for this period
+        tests:
+          - not_null
+      - name: swaps_count
+        description: Number of swaps in this pool during period
+        tests:
+          - not_null
+      - name: pct_of_period_volume
+        description: Pool's share of total period volume
+        tests:
+          - not_null
+      - name: pct_of_period_fees
+        description: Pool's share of total period fees
+        tests:
+          - not_null
+
+  - name: fct_pool_elasticity_inputs
+    description: >
+      Pool-level elasticity analysis inputs for Phase 4 pool analysis.
+      Contains period-over-period changes, lagged metrics, and market share shifts
+      for calculating pool-specific price elasticity and revenue sensitivity.
+
+      Grain: One row per pool per fee period transition (excludes first period per pool)
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - period_id
+            - pool_name
+    columns:
+      - name: period_id
+        description: Sequential period identifier
+        tests:
+          - not_null
+      - name: pool_name
+        description: Pool identifier (e.g., BTC.BTC, ETH.ETH)
+        tests:
+          - not_null
+      - name: pool_type
+        description: Standardized pool classification (BTC, ETH, STABLE, LONG_TAIL)
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['BTC', 'ETH', 'STABLE', 'LONG_TAIL']
+      - name: final_fee_bps
+        description: Current period fee tier in basis points
+        tests:
+          - not_null
+          - accepted_values:
+              values: [5, 10, 15, 20, 25]
+      - name: prev_fee_bps
+        description: Previous period fee tier in basis points
+        tests:
+          - not_null
+      - name: pct_change_fee_bps
+        description: Percentage change in fee tier from previous period
+        tests:
+          - not_null
+      - name: pct_change_volume
+        description: Percentage change in pool volume from previous period
+        tests:
+          - not_null
+      - name: pct_change_fees
+        description: Percentage change in pool fees from previous period
+        tests:
+          - not_null
+      - name: volume_usd
+        description: Current period pool volume in USD
+        tests:
+          - not_null
+      - name: fees_usd
+        description: Current period pool fees collected in USD
+        tests:
+          - not_null
+      - name: swaps_count
+        description: Number of swaps in this pool during period
+        tests:
+          - not_null
+      - name: time_trend_pool
+        description: Sequential time index per pool for regression controls
+        tests:
+          - not_null
+      - name: time_trend_global
+        description: Global sequential time index for regression controls
+        tests:
+          - not_null

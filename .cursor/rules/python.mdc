@@ -42,7 +42,7 @@ from thorchain_fee_analysis.data import get_snowpark_session
 - Classes: `PascalCase`
 - Constants: `UPPER_SNAKE_CASE`
 - Private: `_leading_underscore`
-- Allow `# noqa: N806` for conventional statistical names (e.g., `X` for design matrix)
+- Avoid single-letter uppercase temporaries (e.g., `X`); prefer descriptive lowercase like `x_values`. Remove unused locals flagged by Ruff.
 
 ## Code Quality
 - Avoid catching broad exceptions; handle specific errors
@@ -67,3 +67,14 @@ from thorchain_fee_analysis.data import get_snowpark_session
 - `src/thorchain_fee_analysis/data/` - Data loading, Snowflake connection
 - `src/thorchain_fee_analysis/visualization/` - Chart builders
 - `src/thorchain_fee_analysis/utils/` - Shared utilities
+
+## Performance & Numerical Conventions (Phase 3 Updates)
+- Prefer vectorized operations (merge + groupby) over per-user/per-period loops.
+- When log-transforming volumes, use `log(x + 1)` to handle zeros; document rationale.
+- Discounting: weekly factor is `(1 + r) ** (1/52)`; always include `horizon` and `discount_rate` in outputs.
+- Bootstrap guidance:
+  - Default `n_bootstrap = 500` for dashboards; 1000+ only in offline scripts.
+  - If dataset >10k users, sample users (≤10k) with a fixed seed for CIs; document sampling rate.
+- Outputs policy:
+  - Heavy/expensive computations should write CSVs to `outputs/` (gitignored).
+  - Dashboards should read these CSVs to remain IO-bound and responsive.

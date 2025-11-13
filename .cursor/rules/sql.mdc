@@ -26,6 +26,13 @@ alwaysApply: false
 - **Check row counts:** Validate expected data volume
 - **Inspect nulls:** Check for unexpected NULL values
 - **Verify joins:** Ensure join keys match expected cardinality
+-
+- **Phase 3 Validation Checklist:**
+  - Enforce uniqueness keys where applicable (e.g., `(user_address, period_id)`).
+  - No negative values in `volume_usd`, `fees_usd`, `swaps_count`.
+  - Fee tiers must be in `{1, 5, 10, 15, 25}`.
+  - Reconcile user-level vs weekly aggregates within ±0.5% across volume, fees, swaps, unique users.
+  - Confirm period alignment (no gaps/overlaps).
 
 ## Key Schema Objects
 - `V_WEEKLY_SUMMARY_FINAL` → Use `FCT_WEEKLY_SUMMARY_FINAL` (mart)
@@ -38,6 +45,11 @@ alwaysApply: false
 - Avoid subqueries in `SELECT` list; use CTEs or joins
 - Use `LIMIT` for exploratory queries
 - Consider materialized views for frequently accessed aggregations
+
+## Permissions & Fallback (Phase 3 Updates)
+- If CREATE VIEW or write access is blocked, do not escalate permissions as a first step.
+- Implement a Python-side fallback to assemble required datasets from approved views (`V_SWAPS_EXPERIMENT_WINDOW`, `V_FEE_PERIODS_MANUAL`) with equivalent logic.
+- Document the SQL intended definition and the Python equivalent in code comments or README.
 
 ## Comments
 - Document assumptions (e.g., "Assumes UTC timestamps")

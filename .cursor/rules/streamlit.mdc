@@ -61,6 +61,14 @@ def load_data(_session: Session) -> pd.DataFrame:
 - Use marts for dashboard queries: `FCT_WEEKLY_SUMMARY_FINAL`, `FCT_ELASTICITY_INPUTS`
 - Handle empty data gracefully with clear error messages
 
+## Caching & Sourcing (Phase 3 Updates)
+- Use `st.cache_resource` for Snowflake connections; avoid re-creating sessions.
+- Use `st.cache_data` with:
+  - `ttl=60–300s` for live Snowflake reads.
+  - Up to `ttl=86400` (24h) only for stable precomputed CSVs.
+- Heavy computations (cohorts, retention, elasticity, LTV) should be computed offline and saved to `outputs/*.csv`; the dashboard should consume these CSVs for speed and reliability.
+- Always provide CSV download buttons for major tables driving charts.
+
 ## User Experience
 - Add loading spinners for long operations
 - Provide clear error messages

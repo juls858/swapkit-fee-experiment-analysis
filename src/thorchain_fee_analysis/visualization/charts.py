@@ -5,6 +5,7 @@ Provides composite visualizations that overlay independent and dependent variabl
 
 import altair as alt
 import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -605,6 +606,299 @@ def create_period_comparison_heatmap(df: pd.DataFrame) -> alt.Chart:
             ],
         )
         .properties(title="Period-over-Period Changes Heatmap", height=200)
+    )
+
+    return chart
+
+
+def create_pool_revenue_treemap(df: pd.DataFrame, pool_type_col: str = "pool_type") -> go.Figure:
+    """
+    Create a treemap showing pool revenue distribution colored by pool type.
+
+    Args:
+        df: DataFrame with columns: pool_name, fees_usd, pool_type
+        pool_type_col: Column name for pool type grouping
+
+    Returns:
+        Plotly Figure object
+    """
+    # Aggregate by pool across ALL periods
+    pool_totals = df.groupby(["pool_name", pool_type_col]).agg({"fees_usd": "sum"}).reset_index()
+
+    # Color mapping for pool types
+    color_map = {
+        "BTC": "#F7931A",
+        "ETH": "#627EEA",
+        "STABLE": "#26A17B",
+        "LONG_TAIL": "#95A5A6",
+    }
+
+    # Create treemap - exact same as Test 3 that worked
+    fig = px.treemap(
+        pool_totals,
+        path=[pool_type_col, "pool_name"],
+        values="fees_usd",
+        color=pool_type_col,
+        color_discrete_map=color_map,
+        title="Pool Revenue Distribution by Type",
+    )
+
+    fig.update_traces(textinfo="label+value")
+    fig.update_layout(height=600)
+
+    return fig
+
+
+def create_pool_small_multiples(
+    df: pd.DataFrame, top_n: int = 6, metric: str = "fees_usd"
+) -> alt.Chart:
+    """
+    Create small multiples showing metric trends for top N pools.
+
+    Args:
+        df: DataFrame with columns: pool_name, period_start_date, metric, final_fee_bps
+        top_n: Number of top pools to display
+        metric: Metric column to plot (default: fees_usd)
+
+    Returns:
+        Altair Chart object with faceted subplots
+    """
+    viz_df = df.copy()
+
+    # Get top N pools by total metric
+    top_pools = viz_df.groupby("pool_name")[metric].sum().nlargest(top_n).index.tolist()
+
+    # Filter to top pools
+    viz_df = viz_df[viz_df["pool_name"].isin(top_pools)].copy()
+    viz_df["period_start_date"] = pd.to_datetime(viz_df["period_start_date"])
+
+    # Create small multiples
+    chart = (
+        alt.Chart(viz_df)
+        .mark_line(point=True, strokeWidth=2)
+        .encode(
+            x=alt.X("period_start_date:T", title="Period", axis=alt.Axis(format="%b %d")),
+            y=alt.Y(
+                f"{metric}:Q",
+                title="Revenue (USD)" if metric == "fees_usd" else metric.replace("_", " ").title(),
+                axis=alt.Axis(format="$,.0s"),
+            ),
+            color=alt.Color(
+                "final_fee_bps:Q",
+                title="Fee Tier (bps)",
+                scale=alt.Scale(scheme="viridis"),
+            ),
+            tooltip=[
+                alt.Tooltip("pool_name:N", title="Pool"),
+                alt.Tooltip("period_start_date:T", title="Date", format="%Y-%m-%d"),
+                alt.Tooltip(f"{metric}:Q", title="Revenue", format="$,.0f"),
+                alt.Tooltip("final_fee_bps:Q", title="Fee (bps)", format=".0f"),
+            ],
+        )
+        .properties(width=250, height=150)
+        .facet(
+            facet=alt.Facet("pool_name:N", title="Pool"),
+            columns=3,
+        )
+    )
+
+    return chart
+
+
+def create_pool_elasticity_heatmap(df: pd.DataFrame, metric: str = "pct_change_fees") -> alt.Chart:
+    """
+    Create a heatmap showing pool elasticity across fee tiers.
+
+    Args:
+        df: DataFrame with columns: pool_name, final_fee_bps, metric
+        metric: Metric to display (default: pct_change_fees)
+
+    Returns:
+        Altair Chart object
+    """
+    viz_df = df.copy()
+
+    # Aggregate by pool and fee tier
+    heatmap_data = viz_df.groupby(["pool_name", "final_fee_bps"])[metric].mean().reset_index()
+
+    # Get top 15 pools by total activity
+    if "fees_usd" in viz_df.columns:
+        top_pools = viz_df.groupby("pool_name")["fees_usd"].sum().nlargest(15).index.tolist()
+        heatmap_data = heatmap_data[heatmap_data["pool_name"].isin(top_pools)]
+
+    chart = (
+        alt.Chart(heatmap_data)
+        .mark_rect()
+        .encode(
+            x=alt.X("final_fee_bps:O", title="Fee Tier (bps)"),
+            y=alt.Y("pool_name:N", title="Pool", sort="-x"),
+            color=alt.Color(
+                f"{metric}:Q",
+                title="Avg Change (%)",
+                scale=alt.Scale(scheme="redyellowgreen", domain=[-50, 0, 50]),
+            ),
+            tooltip=[
+                alt.Tooltip("pool_name:N", title="Pool"),
+                alt.Tooltip("final_fee_bps:O", title="Fee (bps)"),
+                alt.Tooltip(f"{metric}:Q", title="Avg Change (%)", format="+.1f"),
+            ],
+        )
+        .properties(
+            title=f"Pool Response Heatmap: {metric.replace('_', ' ').title()}",
+            height=400,
+            width=400,
+        )
+    )
+
+    # Add text annotations
+    text = chart.mark_text(baseline="middle").encode(
+        text=alt.Text(f"{metric}:Q", format="+.0f"),
+        color=alt.condition(
+            alt.datum[metric] > 0,
+            alt.value("black"),
+            alt.value("white"),
+        ),
+    )
+
+    return chart + text
+
+
+def create_pool_elasticity_scatter(
+    df: pd.DataFrame,
+    x_col: str = "pct_change_fee_bps",
+    y_col: str = "pct_change_volume",
+    color_by: str = "pool_type",
+) -> alt.Chart:
+    """
+    Create scatter plot showing pool-level elasticity with pool type coloring.
+
+    Args:
+        df: DataFrame with pool elasticity data
+        x_col: Column for x-axis (default: pct_change_fee_bps)
+        y_col: Column for y-axis (default: pct_change_volume)
+        color_by: Column to color points by (default: pool_type)
+
+    Returns:
+        Altair Chart object
+    """
+    viz_df = df[[x_col, y_col, color_by, "pool_name", "period_id", "final_fee_bps"]].copy()
+    viz_df = viz_df.replace([float("inf"), float("-inf")], float("nan"))
+    viz_df = viz_df.dropna()
+
+    if len(viz_df) < 2:
+        # Not enough data
+        return (
+            alt.Chart(pd.DataFrame())
+            .mark_text(text="Insufficient data")
+            .properties(width=400, height=300)
+        )
+
+    # Color scheme for pool types
+    color_scale = alt.Scale(
+        domain=["BTC", "ETH", "STABLE", "LONG_TAIL"],
+        range=["#F7931A", "#627EEA", "#26A17B", "#95A5A6"],
+    )
+
+    # Scatter plot
+    scatter = (
+        alt.Chart(viz_df)
+        .mark_circle(size=100, opacity=0.7)
+        .encode(
+            x=alt.X(
+                f"{x_col}:Q",
+                title="Fee Change (%)",
+                scale=alt.Scale(zero=False),
+            ),
+            y=alt.Y(
+                f"{y_col}:Q",
+                title="Volume Change (%)",
+                scale=alt.Scale(zero=False),
+            ),
+            color=alt.Color(
+                f"{color_by}:N",
+                title="Pool Type",
+                scale=color_scale,
+            ),
+            tooltip=[
+                alt.Tooltip("pool_name:N", title="Pool"),
+                alt.Tooltip("period_id:Q", title="Period"),
+                alt.Tooltip(f"{x_col}:Q", title="Fee Change (%)", format="+.1f"),
+                alt.Tooltip(f"{y_col}:Q", title="Volume Change (%)", format="+.1f"),
+                alt.Tooltip("final_fee_bps:Q", title="Fee (bps)", format=".0f"),
+            ],
+        )
+    )
+
+    # Regression line
+    regression = (
+        alt.Chart(viz_df)
+        .mark_line(color="red", strokeDash=[5, 5], strokeWidth=2)
+        .transform_regression(x_col, y_col, method="linear")
+        .encode(
+            x=alt.X(f"{x_col}:Q"),
+            y=alt.Y(f"{y_col}:Q"),
+        )
+    )
+
+    chart = (scatter + regression).properties(
+        title="Pool-Level Price Elasticity",
+        width=500,
+        height=400,
+    )
+
+    return chart
+
+
+def create_pool_market_share_area(df: pd.DataFrame, pool_type_col: str = "pool_type") -> alt.Chart:
+    """
+    Create stacked area chart showing pool market share evolution over time.
+
+    Args:
+        df: DataFrame with columns: period_start_date, pool_name, pool_type, pct_of_period_volume
+        pool_type_col: Column name for pool type grouping
+
+    Returns:
+        Altair Chart object
+    """
+    viz_df = df.copy()
+    viz_df["period_start_date"] = pd.to_datetime(viz_df["period_start_date"])
+
+    # Get top 10 pools by average share
+    top_pools = (
+        viz_df.groupby("pool_name")["pct_of_period_volume"].mean().nlargest(10).index.tolist()
+    )
+
+    # Filter and aggregate others
+    viz_df["pool_display"] = viz_df["pool_name"].apply(lambda x: x if x in top_pools else "Other")
+
+    agg_df = (
+        viz_df.groupby(["period_start_date", "pool_display", pool_type_col])
+        .agg({"pct_of_period_volume": "sum"})
+        .reset_index()
+    )
+
+    chart = (
+        alt.Chart(agg_df)
+        .mark_area()
+        .encode(
+            x=alt.X("period_start_date:T", title="Period"),
+            y=alt.Y(
+                "pct_of_period_volume:Q",
+                title="Market Share (%)",
+                stack="normalize",
+                axis=alt.Axis(format=".0%"),
+            ),
+            color=alt.Color("pool_display:N", title="Pool"),
+            tooltip=[
+                alt.Tooltip("pool_display:N", title="Pool"),
+                alt.Tooltip("period_start_date:T", title="Date", format="%Y-%m-%d"),
+                alt.Tooltip("pct_of_period_volume:Q", title="Share", format=".2%"),
+            ],
+        )
+        .properties(
+            title="Pool Market Share Evolution (Normalized)",
+            height=400,
+        )
     )
 
     return chart
