@@ -117,6 +117,7 @@ D. Revenue Attribution & Decomposition
 ---
 
 ### **Phase 3: User Behavior & Segmentation (Week 2-3)**
+See implementation details and dashboard specs: [PHASE3_IMPLEMENTATION_GUIDE.md](PHASE3_IMPLEMENTATION_GUIDE.md)
 
 E. Cohort Analysis
 **Analysis**:

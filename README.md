@@ -583,6 +583,7 @@ Phase 1 focused on data validation and infrastructure:
 - **[SwapKit Overview](docs/SWAPKIT_DATASHARE.md)**: SwapKit business context
 - **[BigQuery Dictionary](docs/swapkit_bigquery_data_dictionary.md)**: BigQuery data source documentation
 - **[Executive Summary](docs/swapkit_executive_summary.md)**: Project overview and key insights
+ - **[Phase 3 Implementation Guide](docs/PHASE3_IMPLEMENTATION_GUIDE.md)**: Analyst-ready plan and visualization specs for user behavior & segmentation
 
 ## Technology Stack
 
